@@ -31,7 +31,7 @@ class Settings(BaseSettings):
     washready_db_url: str | None = None
 
     # ---- Observabilidad con Langfuse (Dia 4) ----
-    langfuse_host: str | None = None
+    langfuse_base_url: str | None = None
     langfuse_public_key: str | None = None
     langfuse_secret_key: str | None = None
 

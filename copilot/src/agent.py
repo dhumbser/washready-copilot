@@ -21,6 +21,7 @@ from langgraph.prebuilt import ToolNode, tools_condition
 
 from src.config import settings
 from src.guardrails import evaluar_entrada, mensaje_rechazo
+from src.observability import get_langfuse_handler
 from src.prompts import build_system_prompt
 from src.tools import TOOLS
 
@@ -74,11 +75,31 @@ def build_graph():
 _app = build_graph()
 
 
+def _build_config(thread_id: str, tags: list[str] | None = None) -> dict:
+    """Config comun para invocar el grafo: memoria (thread_id) + traza en
+    Langfuse si hay claves configuradas (ver observability.py; si no, el
+    agente sigue funcionando igual mas sin trazas).
+
+    NOTA: probamos a fijar el trace_id de Langfuse via config["run_id"], pero
+    en la version instalada del SDK (4.12, arquitectura OTel) el trace_id lo
+    asigna el propio exportador y NO coincide con el run_id de LangChain -
+    verificado contra la API real. Para correlacionar una traza en concreto
+    (Dia 4, Commit 2) usaremos `tags` en su lugar, que si viajan tal cual.
+    """
+    config: dict = {"configurable": {"thread_id": thread_id}}
+    handler = get_langfuse_handler()
+    if handler is not None:
+        config["callbacks"] = [handler]
+        if tags:
+            config["metadata"] = {"langfuse_tags": tags}
+    return config
+
+
 def run(pregunta: str, thread_id: str = "cli") -> str:
     """Ejecuta una pregunta contra el agente y devuelve el texto de la respuesta
     final. thread_id separa la memoria conversacional de cada sesion/usuario.
     """
-    config = {"configurable": {"thread_id": thread_id}}
+    config = _build_config(thread_id)
     result = _app.invoke({"messages": [("user", pregunta)]}, config=config)
     return result["messages"][-1].content
 
@@ -103,11 +124,15 @@ def _extraer_traza(mensajes_turno: list) -> list[dict]:
     return traza
 
 
-def run_with_trace(pregunta: str, thread_id: str = "ui") -> tuple[str, list[dict]]:
+def run_with_trace(
+    pregunta: str, thread_id: str = "ui", tags: list[str] | None = None
+) -> tuple[str, list[dict]]:
     """Como run(), pero ademas devuelve la traza de tools invocadas en ESTE
-    turno (para mostrarla en la UI). No cambia el historial ni afecta a run().
+    turno (para mostrarla en la UI, o para correlacionar la traza de Langfuse
+    con una pregunta del golden dataset via `tags` en el Dia 4). No cambia el
+    historial ni afecta a run().
     """
-    config = {"configurable": {"thread_id": thread_id}}
+    config = _build_config(thread_id, tags=tags)
     mensajes_previos = len(_app.get_state(config).values.get("messages", []))
 
     result = _app.invoke({"messages": [("user", pregunta)]}, config=config)
