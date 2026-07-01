@@ -50,5 +50,5 @@ picos de bonos) y despliegue multi-tenant por empresa.
 ```
 washready-copilot/
 ├── wash-ready/     # TFG previo: backend Spring Boot (base de datos + API). Base, no evaluable.
-└── copilot/        # Proyecto del curso: agente Python. <- el trabajo de AI Engineering
+└── copilot/        # Proyecto del curso: agente Python.
 ```
