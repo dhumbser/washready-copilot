@@ -13,9 +13,9 @@ import streamlit as st
 
 from src.agent import run_with_trace
 
-st.set_page_config(page_title="washready-copilot", page_icon="🚗")
+st.set_page_config(page_title="washready-copilot")
 
-st.title("🚗 washready-copilot")
+st.title("washready-copilot")
 st.caption("Pregúntale a los datos de Wash & Ready en lenguaje natural.")
 
 if "thread_id" not in st.session_state:
