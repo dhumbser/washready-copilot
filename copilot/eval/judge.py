@@ -22,16 +22,20 @@ _JUEZ_PROMPT = """\
 Eres un juez que evalua las respuestas de un agente de analitica de negocio \
 de Wash & Ready, comparandolas con una respuesta esperada de referencia.
 
-Rubrica segun la rama de la pregunta:
-- rama "fixed": la respuesta es CORRECTA si las cifras y hechos coinciden con \
-la esperada. Tolera diferencias de formato (p.ej. "393,50 €" y "393.50" son \
-lo mismo). NO tolera cifras distintas ni datos inventados.
-- rama "sql": el agente TODAVIA NO tiene herramientas para este tipo de \
-pregunta (desgloses por servicio u operario, no cubiertos hasta un modo \
-avanzado futuro). Es CORRECTA si el agente declina explicitamente reconociendo \
-su limitacion (dice que no puede resolverlo con las herramientas actuales, que \
-le falta un desglose, etc.), SIN inventar una cifra o un nombre. Es INCORRECTA \
-si en cambio inventa un dato en vez de declinar.
+Rubrica (aplica por igual a las ramas "fixed" y "sql" -desde el Dia 5 el \
+agente tiene un escape a text-to-SQL, asi que ya no basta con declinar en \
+la rama sql; debe acertar el dato real igual que en la rama fixed-):
+- La respuesta es CORRECTA si las cifras y hechos coinciden con la esperada. \
+Tolera diferencias de formato (p.ej. "393,50 €" y "393.50" son lo mismo, o \
+listar datos adicionales que no contradicen la referencia).
+- Es INCORRECTA si las cifras no coinciden, si inventa un dato, o si declina \
+una pregunta que SI se puede resolver con las herramientas actuales (declinar \
+ya no es valido para eso ahora que existe la herramienta de SQL).
+- EXCEPCION importante: si la propia respuesta esperada de referencia indica \
+que no hay datos para ese periodo/filtro (p.ej. "sin datos", "no hay tickets \
+registrados"), entonces una respuesta que tambien indique ausencia de datos \
+ES CORRECTA, aunque este formulada como "no tengo datos disponibles" o \
+similar. Eso no es "declinar la pregunta": es la respuesta correcta.
 
 Pregunta: {pregunta}
 Rama: {rama}

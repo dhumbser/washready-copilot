@@ -125,7 +125,8 @@
 
 - id: s03
   pregunta: "¿Cuántos servicios del catálogo no se han vendido nunca?"
-  respuesta_esperada: "26 de los 40 servicios del catálogo"
+  respuesta_esperada: "30 de los 40 servicios del catálogo"
+  notas: "Corregido el Dia 5: el valor original (26) contaba cualquier aparicion en ticket_detalle sin filtrar por estado del ticket, inconsistente con la convencion PAGADO/CERRADO usada en el resto del dataset (s01/s02 si la aplicaban). Verificado con SQL directo: 30 es el valor consistente con esa convencion."
   rama_esperada: sql
   tool_esperada: consultar_sql
 
