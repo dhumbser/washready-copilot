@@ -12,7 +12,7 @@ from __future__ import annotations
 
 from typing import Annotated, TypedDict
 
-from langchain_core.messages import AIMessage, SystemMessage
+from langchain_core.messages import AIMessage, SystemMessage, ToolMessage
 from langchain_openai import ChatOpenAI
 from langgraph.checkpoint.memory import MemorySaver
 from langgraph.graph import END, START, StateGraph
@@ -81,3 +81,36 @@ def run(pregunta: str, thread_id: str = "cli") -> str:
     config = {"configurable": {"thread_id": thread_id}}
     result = _app.invoke({"messages": [("user", pregunta)]}, config=config)
     return result["messages"][-1].content
+
+
+def _extraer_traza(mensajes_turno: list) -> list[dict]:
+    """A partir de los mensajes nuevos de un turno, empareja cada tool_call con
+    su ToolMessage de respuesta (por tool_call_id) y produce una traza legible
+    para el panel de trazabilidad de la UI. Si el turno se bloqueo en el
+    guardrail no habra ningun tool_call y la traza sale vacia.
+    """
+    resultados_por_id = {
+        m.tool_call_id: m.content for m in mensajes_turno if isinstance(m, ToolMessage)
+    }
+    traza = []
+    for m in mensajes_turno:
+        for tc in getattr(m, "tool_calls", None) or []:
+            traza.append({
+                "tool": tc["name"],
+                "args": tc["args"],
+                "resultado": resultados_por_id.get(tc["id"]),
+            })
+    return traza
+
+
+def run_with_trace(pregunta: str, thread_id: str = "ui") -> tuple[str, list[dict]]:
+    """Como run(), pero ademas devuelve la traza de tools invocadas en ESTE
+    turno (para mostrarla en la UI). No cambia el historial ni afecta a run().
+    """
+    config = {"configurable": {"thread_id": thread_id}}
+    mensajes_previos = len(_app.get_state(config).values.get("messages", []))
+
+    result = _app.invoke({"messages": [("user", pregunta)]}, config=config)
+
+    mensajes_turno = result["messages"][mensajes_previos:]
+    return result["messages"][-1].content, _extraer_traza(mensajes_turno)
