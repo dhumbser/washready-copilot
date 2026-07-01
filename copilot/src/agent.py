@@ -4,8 +4,8 @@ conversacional por thread_id.
     START -> guardrail -> (bloqueado?) -> END
                         -> agent -> (tools_condition) -> tools -> agent -> ... -> END
 
-El nodo `agent` estaba aislado desde el Dia 2 precisamente para poder anteponer
-aqui el guardrail sin tocar su logica interna.
+El nodo `agent` esta aislado en su propia funcion para poder anteponer el
+guardrail sin tocar su logica interna.
 """
 
 from __future__ import annotations
@@ -80,11 +80,11 @@ def _build_config(thread_id: str, tags: list[str] | None = None) -> dict:
     Langfuse si hay claves configuradas (ver observability.py; si no, el
     agente sigue funcionando igual mas sin trazas).
 
-    NOTA: probamos a fijar el trace_id de Langfuse via config["run_id"], pero
-    en la version instalada del SDK (4.12, arquitectura OTel) el trace_id lo
-    asigna el propio exportador y NO coincide con el run_id de LangChain -
-    verificado contra la API real. Para correlacionar una traza en concreto
-    (Dia 4, Commit 2) usaremos `tags` en su lugar, que si viajan tal cual.
+    NOTA: fijar el trace_id de Langfuse via config["run_id"] no funciona en la
+    version instalada del SDK (4.12, arquitectura OTel): el trace_id lo asigna
+    el propio exportador y no coincide con el run_id de LangChain (verificado
+    contra la API real). Para correlacionar una traza en concreto se usan
+    `tags` en su lugar, que si viajan tal cual.
     """
     config: dict = {"configurable": {"thread_id": thread_id}}
     handler = get_langfuse_handler()
@@ -129,8 +129,8 @@ def run_with_trace(
 ) -> tuple[str, list[dict]]:
     """Como run(), pero ademas devuelve la traza de tools invocadas en ESTE
     turno (para mostrarla en la UI, o para correlacionar la traza de Langfuse
-    con una pregunta del golden dataset via `tags` en el Dia 4). No cambia el
-    historial ni afecta a run().
+    con una pregunta del golden dataset via `tags`). No cambia el historial ni
+    afecta a run().
     """
     config = _build_config(thread_id, tags=tags)
     mensajes_previos = len(_app.get_state(config).values.get("messages", []))

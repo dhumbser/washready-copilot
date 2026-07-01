@@ -5,7 +5,7 @@ veredicto como score en la traza de Langfuse correspondiente.
 La traza de cada pregunta se etiqueta con `golden-<id>` (via run_with_trace)
 y se recupera despues consultando por ese tag: en este SDK (Langfuse 4.12,
 OTel) el trace_id lo asigna el propio exportador y no se puede fijar de
-antemano (verificado en el Commit 1), asi que tags es el mecanismo de
+antemano (verificado contra la API real), asi que tags es el mecanismo de
 correlacion que si funciona.
 
 Uso (desde copilot/, con el backend wash-ready arrancado):

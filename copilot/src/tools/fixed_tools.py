@@ -1,7 +1,7 @@
 """Tools fijas del agente: envuelven la API de Wash & Ready para consultas de
 negocio (facturacion, beneficio neto, busqueda de tickets, catalogo).
 
-Enums (verificado el Dia 1 contra el backend real): los parametros de estado
+Enums (verificado contra el backend real): los parametros de estado
 y metodo de pago SOLO aceptan el name() en mayusculas (p.ej. "PAGADO",
 "EFECTIVO"); la etiqueta en espanol ("pagado", "efectivo") devuelve 400.
 Por eso se tipan como Literal con los valores exactos, para que el LLM no

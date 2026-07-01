@@ -18,19 +18,19 @@ class Settings(BaseSettings):
         extra="ignore",  # el .env tambien trae variables propias de wash-ready/
     )
 
-    # ---- Wash & Ready API (necesario desde el Dia 1) ----
+    # ---- Wash & Ready API ----
     washready_api_url: str = "http://localhost:8080"
     washready_api_user: str
     washready_api_password: str
 
-    # ---- LLM (Dia 2+) ----
+    # ---- LLM ----
     openai_api_key: str | None = None
     copilot_model: str = "gpt-5-mini"
 
-    # ---- Acceso SQL de solo lectura para el escape text-to-SQL (Dia 5) ----
+    # ---- Acceso SQL de solo lectura para el escape text-to-SQL ----
     washready_db_url: str | None = None
 
-    # ---- Observabilidad con Langfuse (Dia 4) ----
+    # ---- Observabilidad con Langfuse ----
     langfuse_base_url: str | None = None
     langfuse_public_key: str | None = None
     langfuse_secret_key: str | None = None

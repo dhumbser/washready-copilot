@@ -2,12 +2,12 @@
 
 Se reconstruye en cada turno (ver agent.py) para que la fecha de "hoy" nunca
 quede obsoleta, aunque el proceso lleve horas corriendo (relevante para la
-UI de Streamlit del Dia 3). El catalogo si esta cacheado (context.py), asi
-que reconstruir el prompt es barato.
+UI de Streamlit). El catalogo si esta cacheado (context.py), asi que
+reconstruir el prompt es barato.
 
-El bloque de esquema SQL (Dia 5) solo se anexa si hay una conexion de solo
-lectura configurada (WASHREADY_DB_URL); sin ella, el agente vuelve al
-comportamiento del Dia 4 (declina las preguntas que ninguna tool cubre).
+El bloque de esquema SQL solo se anexa si hay una conexion de solo lectura
+configurada (WASHREADY_DB_URL); sin ella, el agente declina las preguntas
+que ninguna tool cubre.
 """
 
 from __future__ import annotations

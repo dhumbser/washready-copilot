@@ -20,8 +20,8 @@ TOOLS = [
 ]
 
 # Escape a text-to-SQL: solo se registra si hay una conexion de solo lectura
-# configurada (copilot_ro). Sin ella, el agente degrada al comportamiento del
-# Dia 4 y declina las preguntas de rama sql en vez de fallar al importar.
+# configurada (copilot_ro). Sin ella, el agente declina las preguntas que
+# requieren SQL en vez de fallar al importar.
 if settings.washready_db_url:
     from src.tools.sql_tool import consultar_sql
 

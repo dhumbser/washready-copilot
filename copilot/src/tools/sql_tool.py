@@ -3,8 +3,8 @@
 Este validador es defensa en profundidad, NO la frontera de seguridad real:
 la barrera de verdad es que `copilot_ro` solo tiene SELECT sobre las tablas
 de negocio (y columnas concretas de `user`, sin password/disabled_from),
-verificado en la practica el Dia 5 (UPDATE/DELETE y tablas fuera del
-whitelist fallan por permisos aunque este validador tuviera un fallo).
+verificado en la practica (UPDATE/DELETE y tablas fuera del whitelist
+fallan por permisos aunque este validador tuviera un fallo).
 """
 
 from __future__ import annotations

@@ -3,10 +3,10 @@
 Login JWT con re-autenticacion automatica ante un 401 (el access token
 expira a los 45 min, ver jwt.access-token-ttl en el backend). Los metodos
 publicos devuelven el JSON crudo de cada endpoint; el formateo para el
-agente se hace en capas posteriores (tools, Dia 2).
+agente se hace en capas posteriores (tools).
 
-NOTA sobre enums en query params (verificado contra el backend real,
-Dia 1): Ticket.Estado y Ticket.MetodoPago solo aceptan el NOMBRE del
+NOTA sobre enums en query params (verificado contra el backend real):
+Ticket.Estado y Ticket.MetodoPago solo aceptan el NOMBRE del
 enum en mayusculas (p.ej. "PAGADO", "EFECTIVO", "PTE_PAGO"). La etiqueta
 en espanol ("pagado", "efectivo", "pte. de pago") devuelve 400 Bad
 Request. Es el mismo valor que se persiste en BD, ya que

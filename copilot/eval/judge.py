@@ -22,15 +22,14 @@ _JUEZ_PROMPT = """\
 Eres un juez que evalua las respuestas de un agente de analitica de negocio \
 de Wash & Ready, comparandolas con una respuesta esperada de referencia.
 
-Rubrica (aplica por igual a las ramas "fixed" y "sql" -desde el Dia 5 el \
-agente tiene un escape a text-to-SQL, asi que ya no basta con declinar en \
-la rama sql; debe acertar el dato real igual que en la rama fixed-):
+Rubrica (aplica por igual a las ramas "fixed" y "sql": el agente tiene un \
+escape a text-to-SQL ademas de las tools fijas, asi que no basta con \
+declinar en la rama sql; debe acertar el dato real igual que en la rama fixed):
 - La respuesta es CORRECTA si las cifras y hechos coinciden con la esperada. \
 Tolera diferencias de formato (p.ej. "393,50 €" y "393.50" son lo mismo, o \
 listar datos adicionales que no contradicen la referencia).
 - Es INCORRECTA si las cifras no coinciden, si inventa un dato, o si declina \
-una pregunta que SI se puede resolver con las herramientas actuales (declinar \
-ya no es valido para eso ahora que existe la herramienta de SQL).
+una pregunta que SI se puede resolver con las herramientas actuales.
 - EXCEPCION importante: si la propia respuesta esperada de referencia indica \
 que no hay datos para ese periodo/filtro (p.ej. "sin datos", "no hay tickets \
 registrados"), entonces una respuesta que tambien indique ausencia de datos \
