@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Buscar Tickets</title>
+  <link rel="stylesheet" th:href="@{/css/styles.css}"/>
+  <link rel="stylesheet" href="https://cdn.datatables.net/1.13.8/css/jquery.dataTables.min.css">
+  <style>
+    .actions-top {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      margin: 8px 0 12px;
+    }
+
+    .quick {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+
+    .quick .chip {
+      padding: 6px 10px;
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      cursor: pointer;
+      background: #c9cccc;
+    }
+
+    .quick .chip.active {
+      background: #111;
+      color: #fff;
+    }
+
+    .filters-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(160px, 1fr));
+      gap: 8px;
+      align-items: end;
+    }
+
+    @media (max-width:900px) {
+      .filters-grid {
+        grid-template-columns: repeat(2, minmax(160px, 1fr));
+      }
+    }
+
+    @media (max-width:520px) {
+      .filters-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .table-wrapper {
+      overflow-x: auto;
+    }
+
+    .list-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+
+    .dataTables_length {
+      margin: 0;
+    }
+
+    .dataTables_length label {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      white-space: nowrap;
+    }
+
+    .dataTables_info,
+    .dataTables_paginate {
+      padding: 8px 0 2px;
+    }
+
+    .dataTables_info {
+      color: var(--muted);
+      font-size: .9rem;
+    }
+
+    .col-total {
+      text-align: right;
+      font-weight: 600;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    th,
+    td {
+      border: 1px solid var(--border);
+      padding: 8px;
+      text-align: left;
+      vertical-align: middle;
+      white-space: nowrap;
+    }
+
+    th {
+      background: #fafafa;
+      word-break: keep-all;
+    }
+
+    td.ellipsis {
+      max-width: 220px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    /* link en referencia */
+    a.row-link {
+      color: inherit;
+      text-decoration: underline;
+    }
+
+    a.row-link:hover {
+      opacity: .85;
+    }
+
+    .state {
+      padding: 3px 8px;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      font-size: .85rem;
+      white-space: nowrap;
+      font-weight: 600;
+      /* removed global color: #fff to prevent invisible text on unknown states */
+    }
+
+    .state.pte {
+      background-color: #f59f00;
+      color: #fff;
+      text-shadow: 0 1px 1px rgba(0, 0, 0, 0.1);
+    }
+
+    .state.pago {
+      background-color: #37b24d;
+      color: #fff;
+      text-shadow: 0 1px 1px rgba(0, 0, 0, 0.1);
+    }
+
+    .state.cerr {
+      background-color: #1c7ed6;
+      color: #fff;
+      text-shadow: 0 1px 1px rgba(0, 0, 0, 0.1);
+    }
+
+    .state.anu {
+      background-color: #f03e3e;
+      color: #fff;
+      text-shadow: 0 1px 1px rgba(0, 0, 0, 0.1);
+    }
+
+    .muted {
+      color: var(--muted);
+    }
+
+    /* anchos de columnas */
+    col.w-fecha {
+      width: 140px;
+    }
+
+    col.w-referencia {
+      width: 140px;
+    }
+
+    col.w-matricula {
+      width: 110px;
+    }
+
+    col.w-marca {
+      width: 130px;
+    }
+
+    col.w-modelo {
+      width: 120px;
+    }
+
+    col.w-color {
+      width: 110px;
+    }
+
+    col.w-cliente {
+      width: 180px;
+    }
+
+    col.w-telefono {
+      width: 130px;
+    }
+
+    col.w-estado {
+      width: 120px;
+    }
+
+    col.w-centro {
+      width: 150px;
+    }
+
+    .nd {
+      color: #cf5168;
+      font-weight: 600;
+    }
+
+    .nd::before {
+      content: "*** ";
+    }
+
+    .nd::after {
+      content: " ***";
+    }
+
+    main { opacity: 0; transition: opacity 0.1s ease; }
+
+    @media (max-width:720px) {
+      col.w-cliente {
+        width: 140px;
+      }
+
+      col.w-telefono {
+        width: 110px;
+      }
+
+      col.w-marca {
+        width: 110px;
+      }
+
+      col.w-modelo {
+        width: 100px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="container">
+    <header th:replace="~{shared/header :: appHeader(null, true, true, 'Centro de trabajo:', null)}"></header>
+
+    <main>
+    <div id="msg" class="alert" style="display:none"></div>
+
+    <div class="actions-top">
+      <div class="quick">
+        <button id="btnAbiertos" class="chip">Abiertos</button>
+        <button id="btnCerrados" class="chip">Cerrados</button>
+        <button id="btnAnulados" class="chip">Anulados</button>
+      </div>
+    </div>
+
+    <div class="card" style="margin-bottom:12px;">
+      <div class="filters-grid">
+        <div><label>Referencia</label><input id="fReferencia" /></div>
+        <div>
+          <label>Estado</label>
+          <select id="fEstado">
+            <option value="">(Todos)</option>
+            <option value="PTE_PAGO">Pte. de pago</option>
+            <option value="PAGADO">Pagado</option>
+            <option value="CERRADO">Cerrado</option>
+            <option value="ANULADO">Anulado</option>
+          </select>
+        </div>
+        <div>
+          <label>Centro</label>
+          <select id="fCentro">
+            <option value="">(Todos)</option>
+          </select>
+        </div>
+        <div><label>Matrícula</label><input id="fMatricula" /></div>
+        <div><label>Marca</label><input id="fMarca" /></div>
+        <div><label>Modelo</label><input id="fModelo" /></div>
+        <div><label>Color</label><input id="fColor" /></div>
+        <div><label>Cliente (nombre o apellido)</label><input id="fCliente" /></div>
+        <div><label>Teléfono</label><input id="fTelefono" /></div>
+        <div><label>Desde</label><input id="fDesde" type="date" /></div>
+        <div><label>Hasta</label><input id="fHasta" type="date" /></div>
+        <div style="display:flex; gap:8px; align-items:end;">
+          <button id="btnBuscar" class="secondary">Buscar</button>
+          <button id="btnLimpiar" class="secondary">Limpiar</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="list-header">
+        <h3 style="margin:0;">Resultados</h3>
+        <div id="tickets-length"></div>
+      </div>
+      <table id="tickets-table">
+          <colgroup>
+            <col class="w-fecha">
+            <col class="w-referencia">
+            <col class="w-estado">
+            <col style="width:100px;">
+            <col class="w-centro">
+            <col class="w-matricula">
+            <col class="w-marca">
+            <col class="w-modelo">
+            <col class="w-color">
+            <col class="w-cliente">
+            <col class="w-telefono">
+          </colgroup>
+          <thead>
+            <tr>
+              <th class="nowrap">Fecha</th>
+              <th class="nowrap">Referencia</th>
+              <th class="nowrap">Estado</th>
+              <th class="nowrap">Total</th>
+              <th>Centro</th>
+              <th class="nowrap">Matrícula</th>
+              <th>Marca</th>
+              <th>Modelo</th>
+              <th>Color</th>
+              <th>Cliente</th>
+              <th>Teléfono</th>
+            </tr>
+          </thead>
+          <tbody id="tickets-tbody"></tbody>
+        </table>
+    </div>
+    </main>
+  </div>
+  <script th:src="@{/js/app.js}"></script>
+  <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+  <script src="https://cdn.datatables.net/1.13.8/js/jquery.dataTables.min.js"></script>
+  <script th:src="@{/js/buscar_tickets.js}" defer></script>
+</body>
+</html>

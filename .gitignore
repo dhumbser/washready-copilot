@@ -216,3 +216,25 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# ---------- Java / Maven (wash-ready) ----------
+*.class
+*.jar
+*.war
+!**/.mvn/wrapper/maven-wrapper.jar
+target/
+.mvn/timing.properties
+
+# ---------- IDE ----------
+.idea/
+*.iml
+.vscode/
+.settings/
+.project
+.classpath
+
+# ---------- Scratch / temporales ----------
+_extract.py
+_nb.py
+_slides.txt
+_nb.txt

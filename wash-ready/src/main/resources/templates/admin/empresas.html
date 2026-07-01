@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Empresas</title>
+    <link rel="stylesheet" th:href="@{/css/styles.css}"/>
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.8/css/jquery.dataTables.min.css">
+    <style>
+        .list-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 12px;
+        }
+
+        .dataTables_length {
+            margin: 0;
+        }
+
+        .dataTables_length label {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            white-space: nowrap;
+        }
+
+        .col-actions {
+            text-align: right;
+            white-space: nowrap;
+        }
+
+        .toolbar { display:flex; gap:8px; align-items:center; margin-bottom:20px; flex-wrap:wrap; }
+        .toolbar .spacer { flex:1; }
+    </style>
+</head>
+<body>
+      <div class="container">
+    <header th:replace="~{shared/header :: appHeader('empresas', true, true, 'Centro de trabajo:', null)}">
+    </header>
+
+    <main>
+      <h2>Empresas</h2>
+      <div id="msg" class="alert" style="display:none"></div>
+
+      <!-- Toolbar -->
+      <div class="toolbar">
+        <span class="spacer"></span>
+        <button id="toggleForm">Crear empresa</button>
+      </div>
+
+      <!-- Editor Card -->
+      <div id="editorContainer" class="card" style="display:none; margin-bottom:20px;">
+        <form id="form">
+          <p style="margin:0 0 8px; font-size:.8rem; color:var(--muted);">* Campos obligatorios</p>
+          <input type="hidden" id="id" />
+
+          <div class="two">
+            <div><label>Nombre*</label><input id="nombre" required maxlength="150" /></div>
+            <div><label>CIF*</label><input id="cif" required maxlength="20" /></div>
+          </div>
+
+          <label>Dirección</label><input id="direccion" maxlength="255" />
+
+          <div class="two">
+            <div><label>Municipio</label><input id="municipio" maxlength="100" /></div>
+            <div><label>Provincia</label><input id="provincia" maxlength="100" /></div>
+          </div>
+
+          <div class="two">
+            <div><label>País</label><input id="pais" maxlength="100" /></div>
+            <div><label>Código Postal</label><input id="codigoPostal" maxlength="10" /></div>
+          </div>
+
+          <div class="two">
+            <div><label>Correo</label><input id="correo" maxlength="150" type="email" /></div>
+            <div><label>Teléfono</label><input id="telefono" maxlength="30" /></div>
+          </div>
+          <div style="margin-top:12px; display:flex; gap:8px;">
+            <button type="submit">Guardar</button>
+            <button type="button" id="cancel" class="secondary">Cancelar</button>
+          </div>
+        </form>
+      </div>
+
+      <div class="card">
+        <div class="list-header">
+          <h3 style="margin:0;">Listado</h3>
+          <div id="empresas-length"></div>
+        </div>
+        <div class="table-responsive">
+          <table id="empresas-table" class="table-nobreak">
+            <thead>
+              <tr>
+                <th>Nombre</th>
+                <th>CIF</th>
+                <th>Dirección</th>
+                <th>Municipio</th>
+                <th>Provincia</th>
+                <th>País</th>
+                <th>Código Postal</th>
+                <th>Teléfono</th>
+                <th>Correo</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody id="empresas-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+    </main>
+  </div>
+    <script th:src="@{/js/app.js}"></script>
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.8/js/jquery.dataTables.min.js"></script>
+    <script th:src="@{/js/empresas.js}" defer></script>
+</body>
+</html>

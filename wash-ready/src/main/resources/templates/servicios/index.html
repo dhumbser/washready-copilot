@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Servicios</title>
+    <link rel="stylesheet" th:href="@{/css/styles.css}"/>
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.8/css/jquery.dataTables.min.css">
+    <style>
+        .toolbar {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            margin: 12px 0;
+            flex-wrap: wrap;
+        }
+
+        .toolbar .spacer { flex: 1; }
+
+        .filters-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(220px, 1fr));
+            gap: 12px;
+            align-items: end;
+        }
+
+        .filters-grid.form-grid {
+            align-items: start;
+        }
+
+        @media (max-width: 720px) {
+            .filters-grid { grid-template-columns: 1fr; }
+        }
+
+        .filters-grid .actions {
+            grid-column: 1 / -1;
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            table-layout: fixed;
+        }
+
+        th, td {
+            border: 1px solid var(--border);
+            padding: 10px;
+            text-align: left;
+            vertical-align: top;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            word-break: keep-all;
+        }
+
+        .col-desc, .col-centros {
+            white-space: normal;
+            overflow: visible;
+            text-overflow: clip;
+            word-break: normal;
+        }
+
+        .muted { color: var(--muted); }
+
+        .hint {
+            font-size: .9rem;
+            color: #666;
+        }
+
+        select[multiple] { min-height: 120px; }
+
+        .badge {
+            display: inline-block;
+            padding: 2px 7px;
+            margin-left: 6px;
+            border-radius: 999px;
+            font-size: .8rem;
+            border: 1px solid var(--border);
+            background: #eef8ff;
+            color: #0b6ea4;
+            vertical-align: middle;
+        }
+
+        .badge-all-centros {
+            background: #e8f7ef;
+            border-color: #b5e6c8;
+            color: #1b8f44;
+        }
+
+        .dataTables_length label {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            white-space: nowrap;
+        }
+
+        .list-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 12px;
+        }
+
+        .dataTables_length { margin: 0; }
+
+        .checkbox-field {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .checkbox-field input[type="checkbox"] {
+            width: auto;
+            align-self: flex-start;
+            margin-top: 6px;
+        }
+
+        @keyframes rowFlash {
+            0%   { background: #d1fae5; }
+            100% { background: transparent; }
+        }
+
+        tr.row-flash { animation: rowFlash 1.2s ease-out forwards; }
+
+        .modal-card {
+            position: relative;
+            margin: 6vh auto;
+            width: min(900px, 96%);
+            background: #fff;
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 14px;
+            box-shadow: 0 12px 32px rgba(0,0,0,.2);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header th:replace="~{shared/header :: appHeader(null, true, true, 'Centro de trabajo:', null)}"></header>
+
+        <main>
+            <h2>Servicios</h2>
+            <div id="msg" class="alert" role="alert" aria-live="polite" style="display:none;"></div>
+
+            <!-- Toolbar -->
+            <div class="toolbar">
+                <span class="spacer"></span>
+                <button id="toggleForm" style="display:none;">Nuevo servicio</button>
+            </div>
+
+            <!-- Filtros avanzados -->
+            <div class="card" style="margin:12px 0;">
+                <div id="filtersBody">
+                    <div class="filters-grid">
+                        <div>
+                            <label>Descripción</label>
+                            <input type="text" id="fQ" placeholder="Ej. lavado, bono, aspirado…"/>
+                        </div>
+                        <div>
+                            <label>Importe exacto (€)</label>
+                            <input type="number" id="fImporte" min="0" step="0.01" placeholder="Ej. 10.00"/>
+                        </div>
+                        <div>
+                            <label>Tipo</label>
+                            <select id="fTipo">
+                                <option value="">Todos</option>
+                                <option value="TIPO_1">Tipo 1</option>
+                                <option value="TIPO_2">Tipo 2</option>
+                                <option value="TIPO_3">Tipo 3</option>
+                                <option value="GENERAL">General</option>
+                            </select>
+                        </div>
+                        <div id="fCentroWrap" style="display:none;">
+                            <label>Centro</label>
+                            <select id="fCentro">
+                                <option value="">Todos</option>
+                            </select>
+                        </div>
+                        <div class="actions">
+                            <button id="btnBuscar" class="secondary">Buscar</button>
+                            <button id="btnLimpiar" class="secondary">Limpiar</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Listado -->
+            <section class="card">
+                <div class="list-header">
+                    <h3 style="margin:0;">Listado</h3>
+                    <div id="servicios-length"></div>
+                </div>
+                <table id="servicios-table">
+                    <thead>
+                        <tr>
+                            <th class="col-desc">Descripción</th>
+                            <th>Importe</th>
+                            <th>Stock</th>
+                            <th>Tipo</th>
+                            <th class="col-centros">Centros</th>
+                            <th>Editable</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody id="servicios-tbody"></tbody>
+                </table>
+            </section>
+        </main>
+    </div>
+    <!-- MODAL: Alta / Edición de servicio -->
+    <div id="servicioModal" class="modal" aria-hidden="true">
+        <div class="modal-backdrop"></div>
+        <div class="modal-card">
+            <div class="modal-head">
+                <h3 id="formTitle" style="margin:0;">Nuevo servicio</h3>
+                <button type="button" class="secondary" id="modalClose">✕</button>
+            </div>
+            <div id="formMsg" class="alert" style="display:none;"></div>
+            <form id="servicio-form">
+                <div class="filters-grid form-grid" style="grid-template-columns: repeat(3, minmax(220px,1fr));">
+                    <p style="grid-column:1/-1; margin:0 0 4px; font-size:.8rem; color:var(--muted);">* Campos obligatorios</p>
+                    <div>
+                        <label>Tipo*</label>
+                        <select name="tipo" id="tipo" required>
+                            <option value="" disabled selected hidden>Selecciona</option>
+                            <option value="TIPO_1">Tipo 1</option>
+                            <option value="TIPO_2">Tipo 2</option>
+                            <option value="TIPO_3">Tipo 3</option>
+                            <option value="GENERAL">General</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label>Descripción*</label>
+                        <input type="text" name="descripcion" id="descripcion" required maxlength="200" />
+                    </div>
+                    <div>
+                        <label>Importe (€)*</label>
+                        <input type="number" name="importe" id="importe" step="0.01" min="0" required />
+                    </div>
+                    <div>
+                        <label>Stock (opcional)</label>
+                        <input type="number" name="stock" id="stock" min="0" />
+                        <div class="hint">Déjalo vacío para dejar el stock sin definir.</div>
+                    </div>
+                    <div id="editableWrap" class="checkbox-field">
+                        <label>Editable por operarios (ROLE_USER)</label>
+                        <input type="checkbox" id="editable" />
+                        <div class="hint">Permite que los operarios editen este servicio.</div>
+                    </div>
+                    <div class="checkbox-field">
+                        <label>Mostrar 0,00 € en ticket</label>
+                        <input type="checkbox" id="importeCero" />
+                        <div class="hint">Si se marca, el ticket mostrará importe 0,00, pero los informes usarán el importe real.</div>
+                    </div>
+                    <div id="centrosSelWrap" style="display:none;">
+                        <label>Centros (selección múltiple)</label>
+                        <select id="centrosSel" multiple></select>
+                        <div class="hint">Ctrl/Cmd + clic para seleccionar varios.</div>
+                        <div id="centrosSuggestion" style="display:none; margin-top:6px; padding:8px 10px; background:#fffbeb; border:1px solid #fcd34d; border-radius:6px; font-size:.875rem; color:#92400e;">
+                            Tienes todos los centros seleccionados. ¿Prefieres usar <strong>Disponible en todos los centros</strong>? Los centros que se añadan en el futuro quedarán incluidos automáticamente.
+                            <button type="button" class="suggestion-apply secondary" style="margin-top:6px; display:block; font-size:.8rem; padding:3px 10px;">Activar opción global</button>
+                        </div>
+                    </div>
+                    <div class="checkbox-field">
+                        <label>Disponible en todos los centros</label>
+                        <input type="checkbox" id="todosCentros" />
+                        <div class="hint">Regla dinámica: incluye todos los centros actuales y futuros. Úsalo para servicios del catálogo base. Para servicios exclusivos de centros concretos, usa la selección manual.</div>
+                    </div>
+                </div>
+                <div style="display:flex; gap:8px; margin-top:12px;">
+                    <button type="submit" id="saveBtn">Guardar</button>
+                    <button type="button" id="cancelEditBtn" class="secondary">Cancelar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script th:src="@{/js/app.js}"></script>
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.8/js/jquery.dataTables.min.js"></script>
+    <script th:src="@{/js/servicios.js}" defer></script>
+</body>
+</html>

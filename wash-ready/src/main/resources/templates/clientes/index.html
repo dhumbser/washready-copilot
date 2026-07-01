@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Clientes</title>
+    <link rel="stylesheet" th:href="@{/css/styles.css}"/>
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.8/css/jquery.dataTables.min.css">
+    <style>
+        .toolbar {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            margin-bottom: 8px;
+            flex-wrap: wrap;
+        }
+
+        .toolbar .spacer { flex: 1; }
+
+        .filters-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(240px, 1fr));
+            gap: 12px;
+            align-items: end;
+        }
+
+        @media (max-width: 720px) { .filters-grid { grid-template-columns: 1fr; } }
+
+        .filters-actions {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            flex-wrap: wrap;
+            grid-column: 1 / -1;
+        }
+
+        .list-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 12px;
+        }
+
+        .dataTables_length {
+            margin: 0;
+        }
+
+        .dataTables_length label {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            white-space: nowrap;
+        }
+
+        .table-wrapper {
+            overflow-x: auto;
+        }
+
+        #clientes-table tbody tr {
+            cursor: default;
+        }
+
+        #clientes-table tbody tr.bad td:first-child {
+            border-left: 4px solid #ef4444;
+        }
+
+        .nd-flag {
+            color: #cf5168;
+            font-weight: 600;
+        }
+
+        #ndSubmit:disabled {
+            opacity: .6;
+            cursor: not-allowed;
+        }
+
+        .modal-card {
+            position: relative;
+            margin: 6vh auto;
+            width: min(640px, 96%);
+            background: #fff;
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 14px;
+            box-shadow: 0 12px 32px rgba(0, 0, 0, .2);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th, td {
+            border: 1px solid var(--border);
+            padding: 10px;
+            text-align: left;
+        }
+
+        .warn {
+            display: none;
+            margin-top: 6px;
+            color: #b00020;
+            font-weight: 600;
+        }
+
+        .col-actions {
+            text-align: right;
+            white-space: nowrap;
+        }
+
+        @keyframes rowFlash {
+            0%   { background: #d1fae5; }
+            100% { background: transparent; }
+        }
+
+        tr.row-flash { animation: rowFlash 1.2s ease-out forwards; }
+
+        .nd-field {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .nd-field label {
+            margin: 8px 0 4px;
+            font-weight: 600;
+        }
+
+        .nd-field input[type="checkbox"] {
+            width: auto;
+            align-self: flex-start;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header th:replace="~{shared/header :: appHeader(null, true, true, 'Centro de trabajo:', null)}"></header>
+
+        <main>
+            <h2>Clientes</h2>
+            <div id="msg" class="alert" style="display:none"></div>
+
+            <!-- Toolbar -->
+            <div class="toolbar">
+                <span class="spacer"></span>
+                <button id="btnNew">Nuevo cliente</button>
+            </div>
+
+            <!-- Filtros -->
+            <div class="card" style="margin:12px 0;">
+                <div id="filtersBody" class="filters-grid">
+                    <div>
+                        <label>Búsqueda</label>
+                        <input id="q" placeholder="Teléfono, nombre, apellido, NIF..." />
+                    </div>
+                    <div>
+                        <label>Estado</label>
+                        <select id="fEstado">
+                            <option value="">Todos</option>
+                            <option value="false">Activos</option>
+                            <option value="true">No deseados</option>
+                        </select>
+                    </div>
+                    <div class="filters-actions">
+                        <button id="btnClear" class="secondary">Limpiar</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Listado -->
+            <section class="card">
+                <div class="list-header">
+                    <h3 style="margin:0;">Listado de clientes</h3>
+                    <div id="clientes-length"></div>
+                </div>
+                <div class="table-wrapper">
+                    <table id="clientes-table">
+                        <thead>
+                            <tr>
+                                <th>Nombre</th>
+                                <th>Apellido</th>
+                                <th>Teléfono</th>
+                                <th>NIF</th>
+                                <th>Correo</th>
+                                <th>Estado</th>
+                                <th style="width:160px;"></th>
+                            </tr>
+                        </thead>
+                        <tbody id="clientes-tbody"></tbody>
+                    </table>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- MODAL: Alta / Edición de cliente -->
+    <div id="clienteModal" class="modal" aria-hidden="true">
+        <div class="modal-backdrop"></div>
+        <div class="modal-card" style="width:min(760px,96%);">
+            <div class="modal-head">
+                <h3 id="formTitle" style="margin:0;">Nuevo cliente</h3>
+                <button type="button" class="secondary" id="modalClose">✕</button>
+            </div>
+            <div id="formMsg" class="alert" style="display:none;"></div>
+            <form id="form" class="two" style="margin-top:8px;">
+                <p style="grid-column:1/-1; margin:0 0 4px; font-size:.8rem; color:var(--muted);">* Campos obligatorios</p>
+                <input type="hidden" id="id" />
+                <div><label>Nombre*</label><input id="nombre" required maxlength="150" /></div>
+                <div><label>Apellido*</label><input id="apellido" required maxlength="150" /></div>
+                <div><label>Dirección</label><input id="direccion" maxlength="255" /></div>
+                <div><label>Código postal</label><input id="codigoPostal" maxlength="10" /></div>
+                <div><label>NIF</label><input id="nif" maxlength="20" /></div>
+                <div>
+                    <label>Teléfono*</label>
+                    <input id="telefono" required maxlength="30" />
+                    <div id="telWarn" class="warn"></div>
+                </div>
+                <div><label>Correo</label><input id="correo" type="email" maxlength="150" /></div>
+                <div id="ndField" class="nd-field" style="display:none;">
+                    <label for="noDeseado">No deseado</label>
+                    <input id="noDeseado" type="checkbox" />
+                    <div id="ndPendingInfo" style="display:none; margin-top:4px;"><span class="badge-pending">No deseado · Pendiente</span></div>
+                </div>
+                <div style="grid-column:1/-1; display:flex; gap:8px; margin-top:8px;">
+                    <button type="submit" id="btnSave">Guardar</button>
+                    <button type="button" id="btnCancel" class="secondary">Cancelar</button>
+                </div>
+            </form>
+            <div id="vehSection" style="display:none; margin-top:16px; border-top:1px solid var(--border); padding-top:16px;">
+                <h4 style="margin:0 0 8px;">Vehículos asociados</h4>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Matrícula</th><th>Marca</th><th>Modelo</th><th>Color</th><th>Nº plazas</th>
+                        </tr>
+                    </thead>
+                    <tbody id="vehiculos"></tbody>
+                </table>
+                <div class="muted" style="margin-top:8px;">
+                    Para añadir o editar vehículos, accede a la sección de
+                    <a th:href="@{/vehiculos}" style="text-decoration:underline; font-weight:600; color:inherit;">Vehículos</a>.
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: Solicitar No deseado -->
+    <div id="ndModal" class="modal" aria-hidden="true">
+        <div class="modal-backdrop"></div>
+        <div class="modal-card">
+            <div class="modal-head">
+                <h3 style="margin:0;">Solicitud: Cliente no deseado</h3>
+                <button type="button" class="secondary" id="ndClose">✕</button>
+            </div>
+            <div id="ndMsg" class="alert" style="display:none;"></div>
+            <form id="ndForm" class="two" autocomplete="off">
+                <div style="grid-column:1/-1;">
+                    <label>Motivo</label>
+                    <textarea id="ndMotivo" rows="4" maxlength="300" required
+                        placeholder="Describe el motivo o problema con el cliente…"></textarea>
+                    <div style="display:flex; justify-content:space-between; margin-top:4px;">
+                        <span class="muted" style="font-size:0.85em;">Por favor, detalla el motivo completo.</span>
+                        <span id="ndMotivoCount" class="muted" style="font-size:0.85em;">0 / 300</span>
+                    </div>
+                </div>
+                <div style="grid-column:1/-1; display:flex; gap:8px; justify-content:flex-end; margin-top:8px;">
+                    <button type="button" id="ndCancel" class="secondary">Cancelar</button>
+                    <button type="submit" id="ndSubmit">Enviar solicitud</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    <script th:src="@{/js/app.js}"></script>
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.8/js/jquery.dataTables.min.js"></script>
+    <script th:src="@{/js/clientes.js}" defer></script>
+</body>
+</html>

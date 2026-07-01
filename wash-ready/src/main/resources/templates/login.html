@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Wash & Ready · Login</title>
+    <link rel="stylesheet" th:href="@{/css/styles.css}"/>
+</head>
+<body>
+    <div class="container-sm">
+        <main>
+            <div class="login-brand">
+                <img class="login-logo" th:src="@{/img/logo.png}" alt="Wash &amp; Ready"/>
+                <span class="login-brand-name">Wash &amp; Ready</span>
+            </div>
+            <h2>Iniciar sesión</h2>
+            <div id="msg" class="alert" role="alert" aria-live="polite" style="display:none"></div>
+            <form id="login-form" action="/auth/login" method="post">
+                <label>Usuario</label>
+                <input type="text" name="usuario" required/>
+                <label>Contraseña</label>
+                <input type="password" name="password" required/>
+                <button type="submit" style="margin-top:16px">Entrar</button>
+            </form>
+        </main>
+    </div>
+    <script th:src="@{/js/login.js}" defer></script>
+</body>
+</html>

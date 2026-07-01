@@ -1,0 +1,23 @@
+# Agente / LLM
+langgraph
+langchain
+langchain-openai
+openai
+
+# Observabilidad
+langfuse
+
+# Datos / conexion a Wash & Ready
+requests
+SQLAlchemy
+PyMySQL
+
+# UI
+streamlit
+
+# Utilidades
+python-dotenv
+pydantic
+
+# Tests / evaluacion
+pytest

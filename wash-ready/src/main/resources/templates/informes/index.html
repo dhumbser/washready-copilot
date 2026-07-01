@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Informes</title>
+  <link rel="stylesheet" th:href="@{/css/styles.css}"/>
+  <link rel="stylesheet" href="https://cdn.datatables.net/1.13.8/css/jquery.dataTables.min.css">
+  <style>
+    .toolbar {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      margin: 12px 0;
+      flex-wrap: wrap;
+    }
+
+    .toolbar .spacer { flex: 1; }
+
+    .filters {
+      display: grid;
+      gap: 10px;
+      grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+      align-items: start;
+      margin-top: 14px;
+    }
+
+    .filters .field {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .filters .actions {
+      align-self: end;
+    }
+
+    .filters input[disabled],
+    .filters select[disabled] {
+      cursor: not-allowed;
+    }
+
+    .kpis {
+      display: grid;
+      gap: 10px;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      margin-top: 12px;
+    }
+
+    .kpi {
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 12px;
+    }
+
+    .kpi .v {
+      font-size: 1.6rem;
+      font-weight: 700;
+    }
+
+    .kpi .l {
+      color: #666;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 10px;
+    }
+
+    th,
+    td {
+      border: 1px solid var(--border);
+      padding: 8px 10px;
+      text-align: left;
+    }
+
+    th.right,
+    td.right {
+      text-align: right;
+    }
+
+    .muted {
+      color: #666;
+      font-size: .92rem;
+    }
+
+    .list-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+
+    .dataTables_length {
+      margin: 0;
+    }
+
+    .dataTables_length label {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      white-space: nowrap;
+    }
+    main { opacity: 0; transition: opacity 0.1s ease; }
+  </style>
+</head>
+
+<body>
+  <div class="container">
+    <header th:replace="~{shared/header :: appHeader(null, true, true, 'Centro de trabajo:', null)}"></header>
+
+    <main>
+      <h2>Informes</h2>
+      <div id="msg" class="alert" style="display:none"></div>
+
+      <section class="card">
+        <div class="toolbar">
+          <span class="spacer"></span>
+          <button id="btnImprimirInforme">Imprimir informe</button>
+        </div>
+
+        <div id="filtersBody">
+          <div class="filters">
+            <div class="field">
+              <label>Desde</label>
+              <input type="date" id="fdesde" />
+            </div>
+            <div class="field">
+              <label>Hasta</label>
+              <input type="date" id="fhasta" />
+            </div>
+            <div class="field">
+              <label>Centro</label>
+              <select id="centroId">
+                <option value="">Todos los centros</option>
+              </select>
+              <div class="muted" id="centroHelp"></div>
+            </div>
+            <div class="field">
+              <label>Método de pago</label>
+              <select id="metodo">
+                <option value="">Todos</option>
+                <option value="EFECTIVO">Efectivo</option>
+                <option value="TARJETA">Tarjeta</option>
+                <option value="BIZUM">Bizum</option>
+                <option value="BONO">Bono</option>
+                <option value="TRANSFERENCIA">Transferencia</option>
+                <option value="OTRO">Otro</option>
+              </select>
+            </div>
+            <div class="actions" id="filtrosAcciones">
+              <button id="btnAplicar">Aplicar filtros</button>
+              <button id="btnMesActual" class="secondary">Mes actual</button>
+              <button id="btnUlt7" class="secondary">Últimos 7 días</button>
+              <button id="btnHoy" class="secondary">Hoy</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- KPIs -->
+        <div class="kpis">
+          <div class="kpi">
+            <div class="l">Tickets cobrados/cerrados</div>
+            <div class="v" id="k_tickets">0</div>
+          </div>
+          <div class="kpi">
+            <div class="l">Total cobrado</div>
+            <div class="v" id="k_total">0,00 €</div>
+          </div>
+          <div class="kpi">
+            <div class="l">Adelantos aceptados</div>
+            <div class="v" id="k_adelantos">0,00 €</div>
+          </div>
+          <div class="kpi">
+            <div class="l">Beneficio neto</div>
+            <div class="v" id="k_neto">0,00 €</div>
+          </div>
+        </div>
+
+        <!-- Lista de tickets del periodo -->
+        <section style="margin-top:12px;">
+          <div class="list-header">
+            <h3 style="margin:0;">Tickets cobrados/cerrados del periodo</h3>
+            <div id="tickets-cobrados-length"></div>
+          </div>
+
+          <table id="tickets-cobrados-table">
+            <thead>
+              <tr>
+                <th>Fecha</th>
+                <th>Referencia</th>
+                <th>Matrícula</th>
+                <th>Marca</th>
+                <th>Modelo</th>
+                <th>Método de pago</th>
+                <th class="right">Importe</th>
+              </tr>
+            </thead>
+            <tbody id="tickets-cobrados-tbody"></tbody>
+          </table>
+        </section>
+
+        <section id="pendientesCard" style="margin-top:12px; display:none;">
+          <div class="list-header">
+            <h3 style="margin:0;">Tickets pendientes de pago</h3>
+            <div id="tickets-pendientes-length"></div>
+          </div>
+          <table id="tickets-pendientes-table">
+            <thead>
+              <tr>
+                <th>Fecha</th>
+                <th>Referencia</th>
+                <th>Cliente</th>
+                <th>Teléfono</th>
+                <th>Matrícula</th>
+                <th>Centro</th>
+                <th class="right">Importe</th>
+              </tr>
+            </thead>
+            <tbody id="tickets-pendientes-tbody"></tbody>
+          </table>
+        </section>
+      </section>
+    </main>
+  </div>
+  <script th:src="@{/js/app.js}"></script>
+  <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+  <script src="https://cdn.datatables.net/1.13.8/js/jquery.dataTables.min.js"></script>
+  <script th:src="@{/js/informes.js}" defer></script>
+</body>
+</html>

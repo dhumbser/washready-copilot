@@ -1,0 +1,557 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8" />
+    <title>Informe</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <style>
+        @page {
+            size: A4;
+            margin: 12mm 10mm;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: "DejaVu Sans", Arial, sans-serif;
+            font-size: 11px;
+            line-height: 1.4;
+            color: #000000;
+            background: #ffffff;
+            font-weight: 400;
+        }
+
+        h1,
+        h2,
+        h3,
+        p {
+            margin: 0;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 6mm;
+        }
+
+        .header h2 {
+            margin-bottom: 1mm;
+            font-size: 16px;
+            font-weight: 700;
+            letter-spacing: 0.02em;
+        }
+
+        .header div {
+            margin: 0.5mm 0;
+            font-size: 11px;
+            color: #000;
+        }
+
+        table {
+            border-collapse: collapse;
+            table-layout: fixed;
+            width: 100%;
+        }
+
+        .tickets-table {
+            width: 100%;
+        }
+
+        .tickets-table th,
+        .tickets-table td {
+            padding: 1.2mm 0.8mm;
+            border-bottom: 0.5pt solid #000000;
+            word-break: break-word;
+            vertical-align: top;
+        }
+
+        .tickets-table thead th {
+            font-size: 10px;
+            text-transform: uppercase;
+            color: #000000;
+            letter-spacing: 0.04em;
+            border-bottom: 1pt solid #000000;
+            background-color: #ffffff;
+            font-weight: 800;
+        }
+
+        .tickets-table tbody td {
+            font-weight: 400;
+            font-size: 10.5px;
+            color: #000000;
+        }
+
+        .tickets-table th.right,
+        .tickets-table td.right {
+            text-align: right;
+        }
+
+        .tickets-table tbody tr {
+            page-break-inside: avoid;
+        }
+
+        .summary,
+        .totals {
+            page-break-inside: avoid;
+        }
+
+        .summary {
+            margin-top: 4mm;
+            padding-top: 3mm;
+            border-top: 1px solid #000;
+            font-weight: 700;
+            font-size: 10.5px;
+        }
+
+        .summary table {
+            width: auto;
+        }
+
+        .summary td {
+            padding: 0 1.5mm 0 0;
+            border: none;
+            white-space: nowrap;
+        }
+
+        .summary td.value {
+            text-align: right;
+        }
+
+        .summary td.value+td.label {
+            border-left: 1px solid #000;
+            padding-left: 2mm;
+            padding-right: 1mm;
+        }
+
+        .totals {
+            margin-top: 6mm;
+        }
+
+        .totals h3 {
+            font-size: 10.5px;
+            text-transform: uppercase;
+            color: #000;
+            letter-spacing: 0.06em;
+            margin-bottom: 2mm;
+            font-weight: 700;
+        }
+
+        .tickets-table col.metodo-pago {
+            width: 40%;
+        }
+
+        .muted {
+            color: #555;
+            font-size: 9.5px;
+            font-weight: 500;
+        }
+
+        .kpi-summary {
+            margin-bottom: 5mm;
+            border: 1px solid #000000;
+            padding: 2mm;
+            background-color: #ffffff;
+        }
+
+        .kpi-summary h3 {
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            margin-bottom: 2mm;
+            border-bottom: 1px solid #000000;
+            padding-bottom: 1mm;
+        }
+
+        .kpi-summary table {
+            width: 100%;
+            table-layout: auto;
+        }
+
+        .kpi-summary td {
+            font-size: 10px;
+            padding: 0.5mm 0;
+            border: none;
+        }
+
+        .kpi-summary .label {
+            font-weight: 700;
+            width: 35%;
+        }
+
+        .kpi-summary .value {
+            text-align: right;
+            width: 15%;
+            padding-right: 4mm;
+        }
+
+        .kpi-summary .neto-row td {
+            border-top: 1pt solid #000000;
+            padding-top: 1.5mm;
+        }
+
+        .kpi-summary .neto-label {
+            font-weight: 800;
+        }
+
+        .kpi-summary .neto-value {
+            font-weight: 800;
+        }
+
+        .kpi-summary .neto-note {
+            font-size: 9px;
+            padding-top: 0.8mm;
+            border-top: 0.5pt solid #000000;
+        }
+
+        .kpi-summary.compact .label {
+            width: 70%;
+        }
+
+        .kpi-summary.compact .value {
+            width: 30%;
+            padding-right: 0;
+        }
+
+        .section-title {
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            margin-top: 6mm;
+            margin-bottom: 2mm;
+            font-weight: 700;
+            border-bottom: 1px solid #000;
+            padding-bottom: 1mm;
+        }
+
+        .tickets-table tfoot td {
+            font-weight: 800;
+            border-top: 1pt solid #000000;
+            padding: 1.8mm 0.8mm;
+            background-color: #ffffff;
+            font-size: 11px;
+            color: #000000;
+        }
+
+        .no-footer-bottom-line tfoot td {
+            border-bottom: none;
+        }
+    </style>
+    <style th:if="${!isAdmin}">
+        @page {
+            size: 80mm [[${pageHeight}]]mm;
+            margin: 5mm 2mm;
+        }
+
+        body {
+            font-size: 11px;
+            line-height: 1.45;
+        }
+
+        .tickets-table col.numero {
+            width: 24mm;
+        }
+
+        .tickets-table col.telefono {
+            width: 16mm;
+        }
+
+        .tickets-table col.matricula {
+            width: 16mm;
+        }
+
+        .tickets-table col.importe {
+            width: 16mm;
+        }
+
+        .tickets-table thead th {
+            font-size: 9px;
+            letter-spacing: 0.04em;
+        }
+
+        .tickets-table tbody td {
+            font-size: 9.5px;
+        }
+
+        .tickets-table th,
+        .tickets-table td {
+            padding: 0.7mm 0.4mm;
+        }
+
+        .tickets-table tbody td:nth-child(-n+3),
+        .tickets-table td.right {
+            white-space: nowrap;
+        }
+
+
+        .summary {
+            font-size: 11px;
+        }
+
+        .totals h3,
+        .totals table td {
+            font-size: 11px;
+        }
+
+        .muted {
+            font-size: 10.5px;
+        }
+    </style>
+    <style th:if="${isAdmin}">
+        .date-group-header td {
+            background: #f0f0f0;
+            font-weight: 700;
+            font-size: 10px;
+            letter-spacing: 0.03em;
+            padding: 1.5mm 0.8mm;
+            border-top: 0.5pt solid #000;
+        }
+
+        .tickets-table col.numero {
+            width: 15%;
+        }
+
+        .tickets-table col.telefono {
+            width: 15%;
+        }
+
+        .tickets-table col.matricula {
+            width: 15%;
+        }
+
+        .tickets-table col.centro {
+            width: 30%;
+        }
+
+        .tickets-table col.importe {
+            width: 25%;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="header">
+        <h2 th:text="${mismoDia} ? 'Cierre de caja' : 'Informe del período'">Cierre de caja</h2>
+        <div><strong>Centro:</strong> <span th:text="${centroNombre}">—</span></div>
+        <div>
+            <strong>Período:</strong>
+            <span th:if="${mismoDia}" th:text="${#temporals.format(fechaDesde, 'dd/MM/yyyy')}">01/01/2024</span>
+            <span th:if="${!mismoDia}"
+                th:text="|${#temporals.format(fechaDesde, 'dd/MM/yyyy')} - ${#temporals.format(fechaHasta, 'dd/MM/yyyy')}|">01/01/2024
+                - 02/01/2024</span>
+        </div>
+    </div>
+
+    <div class="kpi-summary" th:if="${isAdmin}">
+        <h3>Resumen del período</h3>
+        <table>
+            <tbody>
+                <tr>
+                    <td class="label">Tickets cobrados/cerrados:</td>
+                    <td class="value" th:text="${totalTickets}">0</td>
+
+                    <td class="label">Total cobrado:</td>
+                    <td class="value" th:text="|${#numbers.formatDecimal(totalImporte, 1, 'POINT', 2, 'COMMA')} €|">0,00
+                        €</td>
+                </tr>
+                <tr>
+                    <td class="label">Tickets pendientes de pago:</td>
+                    <td class="value" th:text="${totalTicketsPendientes}">0</td>
+
+                    <td class="label">Importe pendiente:</td>
+                    <td class="value"
+                        th:text="|${#numbers.formatDecimal(totalImportePendientes, 1, 'POINT', 2, 'COMMA')} €|">0,00 €
+                    </td>
+                </tr>
+                <tr>
+                    <td class="label" colspan="3">Adelantos aceptados:</td>
+                    <td class="value"
+                        th:text="|${#numbers.formatDecimal(adelantosAceptados, 1, 'POINT', 2, 'COMMA')} €|">0,00 €</td>
+                </tr>
+                <tr class="neto-row">
+                    <td class="label neto-label" colspan="3">Beneficio neto:</td>
+                    <td class="value neto-value"
+                        th:text="|${#numbers.formatDecimal(beneficioNeto, 1, 'POINT', 2, 'COMMA')} €|">0,00 €</td>
+                </tr>
+                <tr>
+                    <td colspan="4" class="neto-note">Calculado tras adelantos aceptados.</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <div class="kpi-summary compact" th:if="${!isAdmin}">
+        <h3>Resumen del día</h3>
+        <table>
+            <tbody>
+                <tr>
+                    <td class="label">Tickets cobrados/cerrados:</td>
+                    <td class="value" th:text="${totalTickets}">0</td>
+                </tr>
+                <tr>
+                    <td class="label">Total cobrado:</td>
+                    <td class="value" th:text="|${#numbers.formatDecimal(totalImporte, 1, 'POINT', 2, 'COMMA')} €|">0,00
+                        €</td>
+                </tr>
+                <tr>
+                    <td class="label">Adelantos aceptados:</td>
+                    <td class="value"
+                        th:text="|${#numbers.formatDecimal(adelantosAceptados, 1, 'POINT', 2, 'COMMA')} €|">0,00 €
+                    </td>
+                </tr>
+                <tr class="neto-row">
+                    <td class="label neto-label">Beneficio neto:</td>
+                    <td class="value neto-value"
+                        th:text="|${#numbers.formatDecimal(beneficioNeto, 1, 'POINT', 2, 'COMMA')} €|">0,00 €</td>
+                </tr>
+                <tr>
+                    <td colspan="2" class="neto-note">Calculado tras adelantos aceptados.</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <div class="totals" th:if="${totalesMetodos != null && !totalesMetodos.isEmpty()}">
+        <h3 class="section-title">Totales por método de pago</h3>
+        <p th:if="${isAdmin}" style="font-size: 9px; font-weight: 400; color: #555; margin-bottom: 2mm; margin-top: -1mm;">(Solo tickets pagados/cerrados)</p>
+        <table class="tickets-table no-footer-bottom-line">
+            <colgroup>
+                <col class="metodo-pago" />
+                <col class="importe" />
+            </colgroup>
+            <thead>
+                <tr>
+                    <th>Método de Pago</th>
+                    <th class="right">Importe</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr th:each="m : ${totalesMetodos}">
+                    <td class="label" th:text="${m.etiqueta}">Efectivo</td>
+                    <td class="right" th:text="|${#numbers.formatDecimal(m.total, 1, 'POINT', 2, 'COMMA')} €|">0,00 €
+                    </td>
+                </tr>
+            </tbody>
+            <tfoot>
+                <tr>
+                    <td>Total</td>
+                    <td class="right"
+                        th:text="|${#numbers.formatDecimal(#aggregates.sum(totalesMetodos.![total]), 1, 'POINT', 2, 'COMMA')} €|">
+                        0,00 €</td>
+                </tr>
+            </tfoot>
+        </table>
+    </div>
+
+    <h3 class="section-title">Detalle de tickets cobrados/cerrados</h3>
+
+    <table class="tickets-table no-footer-bottom-line">
+        <colgroup>
+            <col class="numero" />
+            <col class="telefono" />
+            <col class="matricula" />
+            <col class="centro" th:if="${isAdmin}" />
+            <col class="importe" />
+        </colgroup>
+        <thead>
+            <tr>
+                <th>Referencia</th>
+                <th>Teléfono</th>
+                <th>Matrícula</th>
+                <th th:if="${isAdmin}">Centro</th>
+                <th class="right">Importe</th>
+            </tr>
+        </thead>
+        <tbody th:if="${isAdmin}">
+            <th:block th:each="entry : ${ticketsByDate}">
+                <tr class="date-group-header">
+                    <td colspan="5" th:text="${#temporals.format(entry.key, 'dd/MM/yyyy')}">01/01/2024</td>
+                </tr>
+                <tr th:each="t : ${entry.value}">
+                    <td th:text="${t.numero}">17521</td>
+                    <td th:text="${t.telefono}">600123123</td>
+                    <td th:text="${t.matricula}">1234ABC</td>
+                    <td th:text="${t.centro}">Centro 1</td>
+                    <td class="right" th:text="|${#numbers.formatDecimal(t.importe, 1, 'POINT', 2, 'COMMA')} €|">60,00 €</td>
+                </tr>
+            </th:block>
+            <tr th:if="${#maps.isEmpty(ticketsByDate)}">
+                <td colspan="5" class="muted">Sin tickets para este rango</td>
+            </tr>
+        </tbody>
+        <tbody th:if="${!isAdmin}">
+            <tr th:each="t : ${tickets}">
+                <td th:text="${t.numero}">17521</td>
+                <td th:text="${t.telefono}">600123123</td>
+                <td th:text="${t.matricula}">1234ABC</td>
+                <td class="right" th:text="|${#numbers.formatDecimal(t.importe, 1, 'POINT', 2, 'COMMA')} €|">60,00 €</td>
+            </tr>
+            <tr th:if="${#lists.isEmpty(tickets)}">
+                <td colspan="4" class="muted">Sin tickets para este rango</td>
+            </tr>
+        </tbody>
+        <tfoot>
+            <tr>
+                <td th:colspan="${isAdmin} ? 4 : 3">
+                    Total
+                </td>
+                <td class="right" th:text="|${#numbers.formatDecimal(totalImporte, 1, 'POINT', 2, 'COMMA')} €|">
+                    0,00 €
+                </td>
+            </tr>
+        </tfoot>
+    </table>
+
+    <div th:if="${isAdmin && !#lists.isEmpty(pendientes)}">
+        <h3 class="section-title" style="margin-top: 6mm;">Tickets pendientes de pago</h3>
+        <table class="tickets-table no-footer-bottom-line">
+            <colgroup>
+                <col style="width: 15%;" />
+                <col style="width: 16%;" />
+                <col style="width: 16%;" />
+                <col style="width: 38%;" />
+                <col style="width: 15%;" />
+            </colgroup>
+            <thead>
+                <tr>
+                    <th>Referencia</th>
+                    <th>Teléfono</th>
+                    <th>Matrícula</th>
+                    <th>Centro</th>
+                    <th class="right">Importe</th>
+                </tr>
+            </thead>
+            <tbody>
+                <th:block th:each="entry : ${pendientesByDate}">
+                    <tr class="date-group-header">
+                        <td colspan="5" th:text="${#temporals.format(entry.key, 'dd/MM/yyyy')}">01/01/2024</td>
+                    </tr>
+                    <tr th:each="t : ${entry.value}">
+                        <td th:text="${t.numero}">17521</td>
+                        <td th:text="${t.telefono}">600123123</td>
+                        <td th:text="${t.matricula}">1234ABC</td>
+                        <td th:text="${t.centro}">Centro 1</td>
+                        <td class="right" th:text="|${#numbers.formatDecimal(t.importe, 1, 'POINT', 2, 'COMMA')} €|">60,00 €</td>
+                    </tr>
+                </th:block>
+            </tbody>
+            <tfoot>
+                <tr>
+                    <td colspan="4">Total</td>
+                    <td class="right"
+                        th:text="|${#numbers.formatDecimal(totalImportePendientes, 1, 'POINT', 2, 'COMMA')} €|">
+                        0,00 €
+                    </td>
+                </tr>
+            </tfoot>
+        </table>
+
+    </div>
+
+    <div style="margin-top:6mm; font-size:8.5px; color:#888; border-top:0.25pt solid #ccc; padding-top:2mm;">
+        Generado el <span th:text="${#temporals.format(generadoAt, 'dd/MM/yyyy HH:mm')}">01/01/2024 00:00</span>
+    </div>
+</body>
+
+</html>

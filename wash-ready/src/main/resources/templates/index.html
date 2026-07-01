@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Panel principal</title>
+    <link rel="stylesheet" th:href="@{/css/styles.css}"/>
+    <style>
+        .big-menu li a.admin-link {
+            background-color: #2c3e50;
+            color: #fff;
+        }
+        .big-menu li a.admin-link:hover {
+            background-color: var(--hover);
+            color: var(--fg);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header th:replace="~{shared/header :: appHeader(null, true, false, 'Centro de trabajo:', null)}"></header>
+
+        <main>
+            <h2>Panel principal</h2>
+            <ul class="big-menu">
+                <li class="admin-only" style="display:none">
+                    <a th:href="@{/admin/dashboard}" class="admin-link">Panel de Administración General</a>
+                </li>
+                <li class="admin-only" style="display:none">
+                    <a th:href="@{/admin/usuarios}">Usuarios · Centros · Empresas</a>
+                </li>
+                <li><a th:href="@{/tickets/buscar}">Ver tickets</a></li>
+                <li><a th:href="@{/tickets/crear}">Nuevo ticket</a></li>
+                <li><a th:href="@{/informes}">Informes</a></li>
+                <li><a th:href="@{/clientes}">Clientes</a></li>
+                <li><a th:href="@{/vehiculos}">Vehículos</a></li>
+                <li><a th:href="@{/servicios}">Servicios</a></li>
+                <li><a th:href="@{/adelantos}">Adelantos</a></li>
+            </ul>
+        </main>
+    </div>
+    <script th:src="@{/js/app.js}"></script>
+</body>
+</html>

@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Usuarios</title>
+    <link rel="stylesheet" th:href="@{/css/styles.css}"/>
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.8/css/jquery.dataTables.min.css">
+    <style>
+        .list-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 12px;
+        }
+
+        .dataTables_length {
+            margin: 0;
+        }
+
+        .dataTables_length label {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            white-space: nowrap;
+        }
+
+        .col-actions {
+            text-align: right;
+            white-space: nowrap;
+        }
+
+        .toolbar { display:flex; gap:8px; align-items:center; margin-bottom:20px; flex-wrap:wrap; }
+        .toolbar .spacer { flex:1; }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th, td {
+            border: 1px solid var(--border);
+            padding: 8px;
+            vertical-align: top;
+            text-align: left;
+        }
+
+        th {
+            background: #f6f6f6;
+            white-space: nowrap;
+        }
+
+        .pill {
+            display: inline-block;
+            padding: 2px 6px;
+            border-radius: 999px;
+            font-size: 0.75rem;
+            background: #eef2ff;
+            color: #2f3a8f;
+        }
+
+        .pill.warn {
+            background: #fdecea;
+            color: #9b2c2c;
+        }
+
+        .pill.ok {
+            background: #e7f7ed;
+            color: #1d6a3c;
+        }
+
+        .pill.pending {
+            background: #fff3d8;
+            color: #8a5b00;
+        }
+
+        #disableNow     { background: #fff3d8; color: #8a5b00; }
+        #reactivateUser { background: #e7f7ed; color: #1d6a3c; }
+
+        .tab-link[disabled] { opacity: 0.45; }
+  </style>
+</head>
+
+<body>
+    <div class="container">
+    <header th:replace="~{shared/header :: appHeader('usuarios', true, true, 'Centro de trabajo:', null)}"></header>
+
+    <main>
+      <h2>Usuarios</h2>
+      <div id="msg" class="alert" style="display:none"></div>
+
+      <!-- Toolbar -->
+      <div class="toolbar">
+        <span class="spacer"></span>
+        <button id="toggleForm">Crear usuario</button>
+      </div>
+
+      <!-- Editor Card (Hidden) -->
+      <div id="editorContainer" class="card" style="display:none; margin-bottom:20px;">
+
+        <div class="tabs">
+          <button class="tab-link active" data-tab="tab-data">Datos de Usuario</button>
+          <button class="tab-link" data-tab="tab-devices" id="btnTabDevices">Dispositivos Vinculados</button>
+        </div>
+
+        <!-- Pestaña 1: Formulario -->
+        <div id="tab-data" class="tab-content active">
+          <form id="form">
+            <p style="margin:0 0 8px; font-size:.8rem; color:var(--muted);">* Campos obligatorios</p>
+            <input type="hidden" id="id" />
+
+            <label>Usuario*</label>
+            <input id="usuario" required />
+
+            <label>Contraseña
+              <span id="pwdHint" class="muted">(requerida al crear, opcional al editar)</span>
+            </label>
+            <input id="password" type="password" />
+
+            <label>Rol*</label>
+            <select id="role">
+              <option value="ROLE_USER">ROLE_USER</option>
+              <option value="ROLE_ADMIN">ROLE_ADMIN</option>
+            </select>
+
+            <label>Baja programada desde</label>
+            <input id="disabledFrom" type="text" />
+            <div style="display:flex; gap:8px; margin-top:6px; flex-wrap:wrap;">
+              <button type="button" id="disableNow" class="secondary">Dar de baja ahora</button>
+              <button type="button" id="reactivateUser" class="secondary">Reactivar acceso</button>
+            </div>
+            <span class="muted-hint">Si no hay fecha, el usuario queda activo.</span>
+
+            <div class="two">
+              <div>
+                <label>Empresa</label>
+                <select id="empresaId"></select>
+              </div>
+              <div>
+                <label>Centro de trabajo</label>
+                <select id="centroId"></select>
+              </div>
+            </div>
+
+
+
+            <div style="margin-top:20px; display:flex; gap:8px;">
+              <button type="submit">Guardar</button>
+              <button type="button" id="cancel" class="secondary">Cancelar</button>
+            </div>
+          </form>
+        </div>
+
+        <!-- Pestaña 2: Dispositivos (FUERA del form) -->
+        <div id="tab-devices" class="tab-content">
+          <div class="device-card">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+              <h4 style="margin:0;">Dispositivos vinculados</h4>
+              <button type="button" class="secondary" id="refreshDevices" title="Recargar lista">↻</button>
+            </div>
+            <table class="device-table">
+              <thead>
+                <tr>
+                  <th>Device ID</th>
+                  <th>Ultimo uso</th>
+                  <th>Estado</th>
+                </tr>
+              </thead>
+              <tbody id="userDevicesBody"></tbody>
+            </table>
+            <div style="margin-top:15px;">
+              <button type="button" class="secondary" id="closeDevicesTab">Cerrar edición</button>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+  <div class="card">
+    <div class="list-header">
+      <h3 style="margin:0;">Listado</h3>
+      <div id="usuarios-length"></div>
+    </div>
+    <table id="usuarios-table">
+      <thead>
+        <tr>
+          <th>Usuario</th>
+          <th>Rol</th>
+          <th>Empresa</th>
+          <th>Centro</th>
+          <th>Estado</th>
+          <th>Baja desde</th>
+          <th>
+            Dispositivos
+            <span style="font-size:0.7rem; font-weight:400; display:block; color:#888; margin-top:2px;">
+              <span style="color:#2f3a8f;">■</span> activos &nbsp;
+              <span style="color:#9b2c2c;">■</span> revocados
+            </span>
+          </th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody id="usuarios-tbody"></tbody>
+    </table>
+  </div>
+  </main>
+  </div>
+    <script th:src="@{/js/app.js}"></script>
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.8/js/jquery.dataTables.min.js"></script>
+    <script th:src="@{/js/usuarios.js}" defer></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/es.js"></script>
+</body>
+</html>

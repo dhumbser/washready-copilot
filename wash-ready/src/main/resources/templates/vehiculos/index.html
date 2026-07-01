@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vehículos</title>
+    <link rel="stylesheet" th:href="@{/css/styles.css}"/>
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.8/css/jquery.dataTables.min.css">
+    <style>
+        .toolbar {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            margin: 12px 0;
+            flex-wrap: wrap;
+        }
+
+        .toolbar .spacer {
+            flex: 1;
+        }
+
+        .filters-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(240px, 1fr));
+            gap: 12px;
+            align-items: end;
+        }
+
+        @media (max-width: 720px) {
+            .filters-grid{
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .filters-actions {
+            display:flex;
+            gap:8px;
+            align-items:center;
+            flex-wrap:wrap;
+            grid-column: 1 / -1;
+        }
+
+        .filters-actions .spacer{
+            flex:1;
+        }
+
+        table {
+            width:100%;
+            border-collapse:collapse;
+        }
+        th, td {
+            border:1px solid var(--border);
+            padding:10px;
+            text-align:left;
+            vertical-align: middle;
+        }
+        .list-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 12px;
+        }
+        .dataTables_length {
+            margin: 0;
+        }
+        .dataTables_length label {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            white-space: nowrap;
+        }
+        .col-actions {
+            text-align: right;
+            white-space: nowrap;
+        }
+        .autocomplete-list {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            z-index: 20;
+            background: #fff;
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            margin-top: 4px;
+            max-height: 240px;
+            overflow: auto;
+            box-shadow: 0 6px 20px rgba(0,0,0,.06);
+        }
+        .autocomplete-list .nores {
+            padding: 10px 12px;
+            color: var(--muted);
+        }
+
+        .chips {
+            display:flex;
+            gap:6px;
+            flex-wrap:wrap;
+        }
+        .chip {
+            display:inline-flex;
+            align-items:center;
+            gap:6px;
+            border:1px solid var(--border);
+            border-radius:999px;
+            padding:6px 10px;
+        }
+        .chip button {
+            background:transparent;
+            color:inherit;
+            border:0;
+            cursor:pointer;
+            padding:0 4px;
+        }
+
+        .modal-card {
+            position: relative;
+            margin: 6vh auto;
+            width: min(760px, 96%);
+            background: #fff;
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 14px;
+            box-shadow: 0 12px 32px rgba(0,0,0,.2);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header th:replace="~{shared/header :: appHeader(null, true, true, 'Centro de trabajo:', null)}"></header>
+
+        <main>
+            <h2>Vehículos</h2>
+            <div id="msg" class="alert" style="display:none"></div>
+
+            <!-- Toolbar: acción de creación, separada de la búsqueda -->
+            <div class="toolbar">
+                <span class="spacer"></span>
+                <button id="btnNew">Nuevo vehículo</button>
+            </div>
+
+            <!-- Filtros -->
+            <div class="card" style="margin:12px 0;">
+                <div id="filtersBody" class="filters-grid">
+                    <div><label>Matrícula</label><input id="fMatricula" placeholder="Ej. 1234 ABC" /></div>
+                    <div><label>Marca</label><input id="fMarca" placeholder="Ej. Toyota, Ford…" /></div>
+                    <div><label>Modelo</label><input id="fModelo" placeholder="Ej. Corolla, Focus…" /></div>
+                    <div><label>Color</label><input id="fColor" placeholder="Ej. rojo, negro…" /></div>
+                    <div><label>Nº plazas</label><input id="fPlaza" placeholder="Ej. 5" /></div>
+                    <div><label>Cliente</label><input id="fCliente" placeholder="Nombre o apellido…" /></div>
+
+                    <div class="filters-actions">
+                        <button id="btnSearch" class="secondary">Buscar</button>
+                        <button id="btnClear"  class="secondary">Limpiar</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Listado -->
+            <div class="card">
+                <div class="list-header">
+                    <h3 style="margin:0;">Listado</h3>
+                    <div id="vehiculos-length"></div>
+                </div>
+                <table id="vehiculos-table">
+                    <thead>
+                        <tr>
+                            <th>Matrícula</th><th>Marca</th><th>Modelo</th><th>Color</th><th>Nº plazas</th><th>Clientes</th><th style="width:160px;"></th>
+                        </tr>
+                    </thead>
+                    <tbody id="vehiculos-tbody"></tbody>
+                </table>
+            </div>
+        </main>
+    </div>
+    <!-- MODAL: Alta / Edición de vehículo -->
+    <div id="vehiculoModal" class="modal" aria-hidden="true">
+        <div class="modal-backdrop"></div>
+        <div class="modal-card">
+            <div class="modal-head">
+                <h3 id="formTitle" style="margin:0;">Nuevo vehículo</h3>
+                <button type="button" class="secondary" id="modalClose">✕</button>
+            </div>
+            <div id="formMsg" class="alert" style="display:none;"></div>
+            <form id="form" class="two">
+                <p style="grid-column:1/-1; margin:0 0 4px; font-size:.8rem; color:var(--muted);">* Campos obligatorios</p>
+                <input type="hidden" id="id"/>
+                <div><label>Matrícula*</label><input id="matricula" required maxlength="20"/></div>
+                <div><label>Marca*</label><input id="marca" required maxlength="80"/></div>
+                <div><label>Modelo*</label><input id="modelo" required maxlength="120"/></div>
+                <div><label>Color</label><input id="color" maxlength="50"/></div>
+                <div><label>Nº plazas</label><input id="plaza" maxlength="30"/></div>
+
+                <div class="autocomplete" style="grid-column:1/-1;">
+                    <label>Buscar cliente para asociar</label>
+                    <input id="clienteSearch" placeholder="Nombre, apellido o teléfono…" autocomplete="off" />
+                    <input type="hidden" id="clienteId" />
+                    <div id="clienteList" class="autocomplete-list" style="display:none;"></div>
+                    <div style="margin-top:8px;">
+                        <button type="button" id="btnAddCliente" class="secondary">Añadir cliente</button>
+                    </div>
+                </div>
+
+                <div style="grid-column:1/-1;">
+                    <label>Clientes asociados</label>
+                    <div id="chips" class="chips"></div>
+                </div>
+
+                <div style="grid-column:1/-1; display:flex; gap:8px;">
+                    <button type="submit">Guardar</button>
+                    <button type="button" id="cancel" class="secondary">Cancelar</button>
+                    <button type="button" id="btnDelete" class="secondary" style="margin-left:auto; display:none;">Eliminar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script th:src="@{/js/app.js}"></script>
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.8/js/jquery.dataTables.min.js"></script>
+    <script th:src="@{/js/vehiculos.js}" defer></script>
+</body>
+</html>

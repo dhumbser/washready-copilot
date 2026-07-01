@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Dashboard</title>
+    <link rel="stylesheet" th:href="@{/css/styles.css}"/>
+    <style>
+        :root {
+            --gap: 14px;
+            --radius: 12px;
+            --thead: #f4f6f8;
+        }
+
+        body {
+            background: #fafbfc;
+        }
+
+        .wrap {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 8px;
+        }
+
+        .muted {
+            color: var(--muted);
+            font-size: .92rem;
+        }
+
+        /* Top: selector + KPI alineados */
+        .top-grid {
+            display: grid;
+            gap: var(--gap);
+            grid-template-columns: 1fr 320px;
+        }
+
+        @media (max-width: 900px) {
+            .top-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .kpi {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            height: 100%;
+        }
+
+        .kpi .label {
+            color: var(--muted);
+        }
+
+        .kpi .big {
+            font-size: 1.9rem;
+            font-weight: 800;
+            line-height: 1.1;
+        }
+
+        .kpi .sub {
+            color: var(--muted);
+        }
+
+        /* Cuadrícula de tarjetas iguales */
+        .cards-grid {
+            display: grid;
+            gap: var(--gap);
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+
+            align-items: stretch;
+        }
+
+        /* En móviles, 1 columna */
+        @media (max-width: 900px) {
+            .cards-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .tbl-card {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .tbl-card h3 {
+            margin: 0 0 8px;
+            font-size: 1.1rem;
+        }
+
+        .h3-sub {
+            font-size: .92rem;
+            font-weight: 400;
+            margin-left: 6px;
+        }
+
+        .table-wrap {
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .h-list {
+            max-height: 280px;
+            overflow: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+            table-layout: fixed;
+        }
+
+        thead th {
+            position: sticky;
+            top: 0;
+            z-index: 1;
+            background: var(--thead);
+            border-bottom: 1px solid var(--border);
+            padding: 10px;
+            text-align: left;
+            white-space: nowrap;
+            text-overflow: ellipsis;
+            overflow: hidden;
+            font-weight: 600;
+        }
+
+        tbody td {
+            border-top: 1px solid #eceff1;
+            padding: 10px;
+            white-space: nowrap;
+            text-overflow: ellipsis;
+            overflow: hidden;
+        }
+
+        tbody tr:nth-child(even) td {
+            background: #fbfcfd;
+        }
+
+        th.right,
+        td.right {
+            text-align: right;
+        }
+
+        .controls {
+            display: grid;
+            gap: 10px;
+            grid-template-columns: minmax(260px, 1fr);
+        }
+
+        .mini-kpi {
+            margin-top: 10px;
+            border: 1px dashed var(--border);
+            border-radius: 10px;
+            padding: 10px;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            background: #fbfcfd;
+        }
+
+        .mini-kpi .label {
+            color: var(--muted);
+            font-size: .92rem;
+        }
+
+        .mini-kpi .value {
+            font-size: 1.4rem;
+            font-weight: 800;
+            line-height: 1.1;
+        }
+        main { opacity: 0; transition: opacity 0.1s ease; }
+
+        /* Solicitud cards */
+        .sol-list { display: flex; flex-direction: column; gap: 8px; }
+        .sol-empty { padding: 16px; color: var(--muted); font-size: .92rem; text-align: center; }
+        .sol-card {
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 12px 14px;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            background: #fff;
+        }
+        .sol-card-head {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+        .sol-card-ref { font-weight: 600; font-size: .95rem; }
+        .sol-card-date { font-size: .8rem; color: var(--muted); white-space: nowrap; }
+        .sol-card-meta { font-size: .85rem; color: var(--muted); }
+        .sol-card-motivo { font-size: .9rem; line-height: 1.4; }
+        .sol-card-actions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 2px; }
+    </style>
+</head>
+
+<body>
+    <div class="wrap">
+        <header th:replace="~{shared/header :: appHeader(null, false, true, 'Centro actual:', 'padding-left:0;padding-right:0;')}"></header>
+
+        <main>
+        <h2>Dashboard</h2>
+        <div id="msg" class="alert" style="display:none"></div>
+
+            <!-- Fila superior: selector + KPI -->
+            <div class="top-grid">
+                <div class="card">
+                    <div class="controls">
+                        <div>
+                            <label>Centro (filtro general)</label>
+                            <select id="selCentro">
+                                <option value="">Todos</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="mini-kpi">
+                        <div class="label">Cantidad mensual de tickets</div>
+                        <div class="value" id="k_tickets_mes">0</div>
+                    </div>
+                    <div class="muted" style="margin-top:6px;">Desglose por centro · mes actual</div>
+                </div>
+
+                <div class="card kpi">
+                    <div class="label">Facturación mensual total</div>
+                    <div class="big" id="k_total">0,00 €</div>
+                    <div class="sub">Base <span id="k_base">0,00 €</span> · IVA <span id="k_iva">0,00 €</span></div>
+                </div>
+            </div>
+
+            <!-- Facturación -->
+            <div class="cards-grid" style="margin-top:14px;">
+                <section class="card tbl-card">
+                    <h3>Facturación del día</h3>
+                    <div class="table-wrap">
+                        <div class="h-list">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th style="width:110px;">Fecha</th>
+                                        <th>Centro</th>
+                                        <th style="width:120px;">Cant. tickets</th>
+                                        <th style="width:140px;">Importe</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="tbFacturacionDia">
+                                    <tr><td colspan="4" class="muted">Cargando…</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </section>
+
+                <section class="card tbl-card">
+                    <h3>Facturación mensual <span class="muted h3-sub" id="factMesLabel"></span></h3>
+                    <div class="table-wrap">
+                        <div class="h-list">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th style="width:110px;">Mes</th>
+                                        <th>Centro</th>
+                                        <th style="width:120px;">Cant. tickets</th>
+                                        <th style="width:140px;">Importe</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="tbFacturacionMes">
+                                    <tr><td colspan="4" class="muted">Cargando…</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </section>
+            </div>
+
+            <!-- Solicitudes pendientes -->
+            <section class="card" style="margin-top:14px;">
+                <h3 style="margin:0 0 12px;">Solicitudes pendientes <span id="solCount" style="display:none;font-size:.75rem;font-weight:500;color:#92600a;background:#fef9ec;border:1px solid #f5d98b;border-radius:999px;padding:2px 9px;vertical-align:middle;"></span></h3>
+                <div id="solList" class="sol-list">
+                    <div class="sol-empty">Cargando…</div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <script th:src="@{/js/app.js}"></script>
+    <script th:src="@{/js/dashboard.js}" defer></script>
+</body>
+</html>

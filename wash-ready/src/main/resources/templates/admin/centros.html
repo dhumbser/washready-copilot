@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Centros</title>
+    <link rel="stylesheet" th:href="@{/css/styles.css}"/>
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.8/css/jquery.dataTables.min.css">
+    <style>
+        .list-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 12px;
+        }
+
+        .dataTables_length {
+            margin: 0;
+        }
+
+        .dataTables_length label {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            white-space: nowrap;
+        }
+
+        .col-actions {
+            text-align: right;
+            white-space: nowrap;
+        }
+
+        .pill {
+            display: inline-block;
+            padding: 2px 6px;
+            border-radius: 999px;
+            font-size: 0.75rem;
+            background: #eef2ff;
+            color: #2f3a8f;
+        }
+
+        .pill.warn {
+            background: #fdecea;
+            color: #9b2c2c;
+        }
+
+        .pill.ok {
+            background: #e7f7ed;
+            color: #1d6a3c;
+        }
+
+        .pill.danger {
+            background: #fca5a5;
+            color: #7f1d1d;
+        }
+
+        .toolbar { display:flex; gap:8px; align-items:center; margin-bottom:20px; flex-wrap:wrap; }
+        .toolbar .spacer { flex:1; }
+
+        .tab-link[disabled] { opacity: 0.45; }
+
+        .checkbox-label { display:flex; align-items:center; gap:8px; cursor:pointer; margin-top:8px; }
+        .checkbox-label input[type="checkbox"] { width:auto; margin:0; flex-shrink:0; }
+    </style>
+</head>
+<body>
+    <div class="container">
+    <header th:replace="~{shared/header :: appHeader('centros', true, true, 'Centro de trabajo:', null)}"></header>
+
+    <main>
+      <h2>Centros</h2>
+      <div id="msg" class="alert" style="display:none"></div>
+
+      <!-- Toolbar -->
+      <div class="toolbar">
+        <label>Filtrar por empresa:</label>
+        <select id="fEmpresa"></select>
+        <span class="spacer"></span>
+        <button id="toggleForm">Crear centro</button>
+      </div>
+
+      <!-- Editor Card -->
+      <div id="editorContainer" class="card" style="display:none; margin-bottom:20px;">
+        <div class="tabs">
+          <button class="tab-link active" data-tab="tab-data">Datos del Centro</button>
+          <button class="tab-link" data-tab="tab-devices" id="btnTabDevices">Dispositivos Vinculados</button>
+        </div>
+
+        <!-- Tab 1: Formulario Datos -->
+        <div id="tab-data" class="tab-content active">
+          <form id="form">
+            <p style="margin:0 0 8px; font-size:.8rem; color:var(--muted);">* Campos obligatorios</p>
+            <input type="hidden" id="id" />
+            <label>Empresa*</label>
+            <select id="empresaId" required></select>
+            <span class="muted-hint">El centro quedará vinculado a esta empresa.</span>
+
+            <label>Nombre*</label><input id="nombre" required maxlength="150" />
+            <label>Dirección</label><input id="direccion" maxlength="255" />
+
+            <div class="two">
+              <div>
+                <label>Ciudad</label>
+                <input id="ciudad" maxlength="100" />
+              </div>
+              <div>
+                <label>Código Postal</label>
+                <input id="codigoPostal" maxlength="10" />
+              </div>
+            </div>
+
+            <div class="two">
+              <div>
+                <label>Correo</label>
+                <input id="correo" maxlength="150" type="email" />
+              </div>
+              <div>
+                <label>Teléfono</label>
+                <input id="telefono" maxlength="30" />
+              </div>
+            </div>
+
+            <label class="checkbox-label">
+              <input id="mostrarLogoTicket" type="checkbox" checked />
+              Mostrar logo en ticket
+            </label>
+
+            <div style="margin-top:20px; display:flex; gap:8px;">
+              <button type="submit">Guardar</button>
+              <button type="button" id="cancel" class="secondary">Cancelar</button>
+            </div>
+          </form>
+        </div>
+
+        <!-- Tab 2: Dispositivos y Limite -->
+        <div id="tab-devices" class="tab-content">
+          <div class="device-card" style="margin-bottom:20px;">
+            <h4 style="margin-bottom:12px;">Configuración de Dispositivos</h4>
+            <label>Límite de dispositivos
+              <span id="activeCountHint" class="muted" style="margin-left:8px; font-weight:normal;"></span>
+            </label>
+            <div style="display:flex; gap:10px; align-items:center;">
+              <input id="maxDevices" type="number" min="0" placeholder="Sin límite" style="max-width:150px;" />
+              <button type="button" id="btnUpdateLimit" class="secondary">Actualizar límite</button>
+            </div>
+            <div class="muted-hint" style="margin-top:4px;">
+              Dejar en blanco para <b>acceso ilimitado</b>. Poner <b>0</b> impide conectar dispositivos.
+            </div>
+          </div>
+
+          <div class="device-card">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+              <h4 style="margin:0;">Dispositivos activos</h4>
+              <button type="button" class="secondary" id="refreshDevices" title="Recargar lista">↻</button>
+            </div>
+            <table class="device-table">
+              <thead>
+                <tr>
+                  <th>Device ID</th>
+                  <th>Usuarios</th>
+                  <th>Último uso</th>
+                  <th>Estado</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody id="centerDevicesBody"></tbody>
+            </table>
+            <div style="margin-top:15px;">
+              <button type="button" class="secondary" id="closeDevicesTab">Cerrar edición</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="list-header">
+          <h3 style="margin:0;">Listado</h3>
+          <div id="centros-length"></div>
+        </div>
+        <div class="table-responsive">
+          <table id="centros-table" class="table-nobreak">
+            <thead>
+              <tr>
+                <th>Nombre</th>
+                <th>Empresa</th>
+                <th>Dirección</th>
+                <th>Ciudad</th>
+                <th>Código Postal</th>
+                <th>Teléfono</th>
+                <th>Correo</th>
+                <th>Límite Dispositivos</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody id="centros-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+    </main>
+    </div>
+    <script th:src="@{/js/app.js}"></script>
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.8/js/jquery.dataTables.min.js"></script>
+    <script th:src="@{/js/centros.js}" defer></script>
+</body>
+</html>

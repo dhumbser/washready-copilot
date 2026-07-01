@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Adelantos</title>
+  <link rel="stylesheet" th:href="@{/css/styles.css}"/>
+  <link rel="stylesheet" href="https://cdn.datatables.net/1.13.8/css/jquery.dataTables.min.css">
+  <style>
+    .table-wrap { overflow-x: auto; }
+
+    table { width: 100%; border-collapse: collapse; }
+
+    th, td {
+      border: 1px solid var(--border);
+      padding: 10px;
+      text-align: left;
+      vertical-align: top;
+      word-break: keep-all;
+      overflow-wrap: normal;
+      hyphens: none;
+    }
+
+    th { white-space: nowrap; }
+
+    .muted { color: var(--muted); }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(180px, 1fr));
+      gap: 12px;
+    }
+
+    @media (max-width: 800px) {
+      .grid { grid-template-columns: 1fr; }
+    }
+
+    .status { font-weight: 600; }
+    .status.PENDIENTE  { color: #ae7b00; }
+    .status.ACEPTADO   { color: #0a7a0a; }
+    .status.RECHAZADO  { color: #b40000; }
+
+    .filters {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(160px, 1fr));
+      gap: 10px;
+      align-items: end;
+    }
+
+    @media (max-width: 820px) {
+      .filters { grid-template-columns: 1fr 1fr; }
+    }
+
+    .list-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+
+    .dataTables_length { margin: 0; }
+
+    .dataTables_length label {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      white-space: nowrap;
+    }
+
+    .col-actions { text-align: right; white-space: nowrap; }
+
+    .warn {
+      display: none;
+      margin-top: 6px;
+      color: #b00020;
+      font-weight: 600;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="container">
+    <header th:replace="~{shared/header :: appHeader(null, true, true, 'Centro de trabajo:', null)}"></header>
+
+    <main>
+      <h2>Adelantos</h2>
+      <div id="msg" class="alert" style="display:none"></div>
+
+      <!-- EMPLEADO -->
+      <section id="userView" class="card" style="display:none;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+          <h3 style="margin:0;">Mis solicitudes</h3>
+          <div style="display:flex; align-items:center; gap:12px;">
+            <span id="disponibleInfo" style="font-size:.875rem; color:var(--muted);"></span>
+            <button id="btnNuevaSolicitud" type="button">Nueva solicitud</button>
+          </div>
+        </div>
+
+        <!-- Filtros empleado -->
+        <div class="card" style="margin-bottom:8px;">
+          <div id="filtersBodyUser">
+            <div class="filters">
+              <div>
+                <label>Estado</label>
+                <select id="fEstadoUser">
+                  <option value="">Todos</option>
+                  <option value="PENDIENTE">Pendiente</option>
+                  <option value="ACEPTADO">Aceptado</option>
+                  <option value="RECHAZADO">Rechazado</option>
+                  <option value="CANCELADO">Cancelado</option>
+                </select>
+              </div>
+              <div>
+                <label>Desde</label>
+                <input id="fFromUser" type="date" />
+              </div>
+              <div>
+                <label>Hasta</label>
+                <input id="fToUser" type="date" />
+              </div>
+              <div style="align-self:end; display:flex; gap:8px;">
+                <button id="btnFiltrarUser" class="secondary">Filtrar</button>
+                <button id="btnLimpiarUser" class="secondary">Limpiar</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div style="display:flex; justify-content:flex-end; margin-bottom:8px;">
+          <div id="adelantos-mine-length"></div>
+        </div>
+        <div class="table-wrap">
+          <table id="adelantos-mine-table">
+            <thead>
+              <tr>
+                <th>Solicitado</th>
+                <th>Resolución</th>
+                <th>Importe</th>
+                <th>Estado / Motivo</th>
+                <th>Acciones</th>
+              </tr>
+            </thead>
+            <tbody id="adelantos-mine-tbody"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- ADMIN -->
+      <section id="adminView" class="card" style="display:none;">
+        <h3>Solicitudes</h3>
+
+        <!-- Filtros admin -->
+        <div class="card" style="margin-bottom:8px;">
+          <div id="filtersBodyAdm">
+            <div class="filters">
+              <div>
+                <label>Estado</label>
+                <select id="fEstadoAdm">
+                  <option value="">Todos</option>
+                  <option value="PENDIENTE" selected>Pendiente</option>
+                  <option value="ACEPTADO">Aceptado</option>
+                  <option value="RECHAZADO">Rechazado</option>
+                  <option value="CANCELADO">Cancelado</option>
+                </select>
+              </div>
+              <div>
+                <label>Desde</label>
+                <input id="fFromAdm" type="date" />
+              </div>
+              <div>
+                <label>Hasta</label>
+                <input id="fToAdm" type="date" />
+              </div>
+              <div style="align-self:end; display:flex; gap:8px;">
+                <button id="btnFiltrarAdm" class="secondary">Filtrar</button>
+                <button id="btnLimpiarAdm" class="secondary">Limpiar</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div style="display:flex; justify-content:flex-end; margin-bottom:8px;">
+          <div id="adelantos-admin-length"></div>
+        </div>
+        <div class="table-wrap">
+          <table id="adelantos-admin-table">
+            <thead>
+              <tr>
+                <th>Solicitado</th>
+                <th>Resolución</th>
+                <th>Trabajador</th>
+                <th>Centro</th>
+                <th>Importe</th>
+                <th>Estado</th>
+                <th>Acciones</th>
+              </tr>
+            </thead>
+            <tbody id="adelantos-admin-tbody"></tbody>
+          </table>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <!-- MODAL: Rechazar solicitud (admin) -->
+  <div id="rechazoModal" class="modal" aria-hidden="true">
+    <div class="modal-backdrop"></div>
+    <div class="modal-card" style="max-width:480px;">
+      <div class="modal-head">
+        <h3 style="margin:0;">Rechazar solicitud</h3>
+        <button type="button" class="secondary" id="rechazoClose">✕</button>
+      </div>
+      <form id="formRechazo" autocomplete="off">
+        <input type="hidden" id="rechazoId" />
+        <div>
+          <label>Motivo del rechazo (opcional)</label>
+          <textarea id="rechazoMotivo" rows="3" maxlength="300"
+              placeholder="Indica el motivo del rechazo…"></textarea>
+          <div style="display:flex; justify-content:space-between; margin-top:4px;">
+            <span class="muted" style="font-size:0.85em;">Opcional. Se enviará al empleado como justificación.</span>
+            <span id="rechazoMotivoCount" class="muted" style="font-size:0.85em;">0 / 300</span>
+          </div>
+        </div>
+        <div id="rechazoMsg" class="alert" style="display:none;"></div>
+        <div style="display:flex; justify-content:flex-end; gap:8px; margin-top:16px;">
+          <button type="button" id="rechazoCancel" class="secondary">Cancelar</button>
+          <button type="submit" id="rechazoSubmit" style="background:#b40000;">Rechazar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL: Nueva solicitud de adelanto -->
+  <div id="solicitudModal" class="modal" aria-hidden="true">
+    <div class="modal-backdrop"></div>
+    <div class="modal-card" style="max-width:520px;">
+      <div class="modal-head">
+        <h3 style="margin:0;">Solicitud: Nueva solicitud de adelanto</h3>
+        <button type="button" class="secondary" id="solicitudClose">✕</button>
+      </div>
+      <div id="solicitudMsg" class="alert" style="display:none;"></div>
+      <form id="formNew" autocomplete="off">
+        <div>
+          <label>Importe (máx. 300,00 €)</label>
+          <input id="importe" type="number" step="1.0" min="1.0" max="300" required />
+        </div>
+        <div>
+          <label>Nombre del trabajador</label>
+          <input id="operarioNombre" type="text" maxlength="120" required />
+        </div>
+        <div>
+          <label>Apellidos del trabajador</label>
+          <input id="operarioApellido" type="text" maxlength="120" required />
+        </div>
+        <div>
+          <label>NIF (DNI/NIE)</label>
+          <input id="operarioNif" type="text" maxlength="30" required />
+          <div id="nifWarn" class="warn"></div>
+        </div>
+        <div style="display:flex; justify-content:flex-end; gap:8px; margin-top:16px;">
+          <button type="button" id="solicitudCancel" class="secondary">Cancelar</button>
+          <button type="submit">Solicitar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script th:src="@{/js/app.js}"></script>
+  <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+  <script src="https://cdn.datatables.net/1.13.8/js/jquery.dataTables.min.js"></script>
+  <script th:src="@{/js/adelantos.js}" defer></script>
+</body>
+</html>

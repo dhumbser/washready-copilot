@@ -1,0 +1,543 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Crear Ticket</title>    
+    <link rel="stylesheet" th:href="@{/css/styles.css}"/>
+    <style>
+        .ticket-back {
+            display: inline-flex;
+            align-items: center;
+            gap: .35rem;
+            margin: 12px 0 18px;
+            text-decoration: none;
+            padding: 8px 12px;
+            border-radius: 10px;
+        }
+
+        .status {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .pill {
+            padding: 6px 10px;
+            border-radius: 999px;
+            border: 1px solid var(--border);
+            font-size: .9rem;
+        }
+
+        .pill.on {
+            background: #111;
+            color: #fff;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 8px;
+        }
+
+        th,
+        td {
+            border: 1px solid var(--border);
+            padding: 10px;
+            text-align: left;
+        }
+
+        .right {
+            text-align: right;
+        }
+
+        .autocomplete-list {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            z-index: 20;
+            background: #fff;
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            margin-top: 4px;
+            max-height: 220px;
+            overflow: auto;
+            box-shadow: 0 6px 20px rgba(0, 0, 0, .06);
+        }
+
+        .autocomplete .inline {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            min-width: 0;
+
+        }
+
+        /*Aumentar tamaño del buscador de vehículos*/
+        .autocomplete .inline #vehiculoSearch {
+            flex: 1 1 auto;
+            min-width: 0;
+            width: 100%;
+        }
+
+
+        #btnNuevoVeh {
+            flex: 0 0 auto;
+            white-space: nowrap;
+        }
+
+        @media (min-width: 900px) {
+            #formTicket.two {
+                grid-template-columns: 1.6fr 1fr 1fr;
+            }
+        }
+
+
+        /* Estilos para el modal */
+        .inline {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+
+
+        .modal-card {
+            position: relative;
+            margin: 6vh auto;
+            width: min(760px, 96%);
+            background: #fff;
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 14px;
+            box-shadow: 0 12px 32px rgba(0, 0, 0, .2);
+        }
+
+        .editable-table-wrap {
+            margin-top: 10px;
+            max-height: 50vh;
+            overflow-y: auto;
+        }
+
+        .nd {
+            color: #b00020;
+            font-weight: 600;
+        }
+
+        .nd::before {
+            content: "*** ";
+        }
+
+        .nd::after {
+            content: " ***";
+        }
+
+        .badge-nd {
+            display: inline-block;
+            margin-left: .5rem;
+            padding: .1rem .4rem;
+            border-radius: .5rem;
+            background: #ffe5e8;
+            color: #b00020;
+            font-size: .8rem;
+            font-weight: 600;
+        }
+
+        .badge-zero {
+            display: inline-block;
+            margin-left: .5rem;
+            padding: .1rem .45rem;
+            border-radius: .6rem;
+            background: #eef6ff;
+            color: #0b5394;
+            font-size: .78rem;
+            font-weight: 600;
+            letter-spacing: .01em;
+            text-transform: uppercase;
+        }
+
+        .history-card {
+            margin-top: 8px;
+            background: #fdfdfd;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 10px;
+            font-size: 0.9em;
+            max-height: 250px;
+            overflow-y: auto;
+        }
+        .history-title {
+            font-weight: 600;
+            margin-bottom: 6px;
+            color: #555;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .history-item { border-bottom: 1px solid #eee; padding: 6px 0; }
+        .history-item:last-child { border-bottom: none; }
+        .history-item-header { display: flex; justify-content: space-between; font-weight: 500; }
+        .history-details { margin-top: 4px; padding-left: 10px; color: #666; font-size: 0.9em; }
+        .history-detail-row { display: flex; justify-content: space-between; }
+        main { opacity: 0; transition: opacity 0.1s ease; }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <header th:replace="~{shared/header :: appHeader(null, true, true, 'Centro de trabajo:', null)}"></header>
+
+        <main>
+        <div id="msg" class="alert" style="display:none"></div>
+
+        <a id="btnTabla" th:href="@{/tickets/buscar}" class="secondary ticket-back">
+            ← Volver a tabla de Tickets
+        </a>
+        <section class="card">
+            <div class="actions" style="justify-content:space-between; margin-bottom:8px;">
+                <div>
+                    <button id="btnNuevo" class="secondary" style="display:none">Nuevo</button>
+                    <button id="btnImprimir" type="button" class="secondary" style="display:none">Imprimir</button>
+                </div>
+                <div class="status">
+                    <span class="pill on" id="stNuevo">Nuevo</span>
+                    <span class="pill" id="stPte">Pte. de pago</span>
+                    <span class="pill" id="stPagado">Pagado</span>
+                    <span class="pill" id="stCerrado">Cerrado</span>
+                    <span class="pill" id="stAnulado">Anulado</span>
+                </div>
+            </div>
+
+            <!-- Bloque Ticket -->
+            <form id="formTicket" class="two">
+                <input type="hidden" id="ticketId" />
+                <div>
+                    <label>Fecha</label>
+                    <input type="date" id="fecha" disabled />
+                </div>
+                <div>
+                    <label>Referencia</label>
+                    <input id="referencia" disabled />
+                </div>
+<div style="grid-column:1/-1;">
+                    <label>Comentarios</label>
+                    <input id="comentarios" />
+                </div>
+
+
+                <!-- Vehiculo por matrícula -->
+                <div class="autocomplete">
+                    <label>Buscar vehículo</label>
+                    <input id="vehiculoSearch" placeholder="Matrícula o teléfono del cliente…"
+                        autocomplete="off" />
+                    <input type="hidden" id="vehiculoId" />
+                    <div id="vehiculoList" class="autocomplete-list" style="display:none;"></div>
+                </div>
+
+                <!-- Cliente (se rellena a partir del vehículo) -->
+                <div>
+                    <label>Cliente</label>
+                    <select id="clienteId" required>
+                        <option value="">— Selecciona —</option>
+                    </select>
+                    <div id="ndBox" style="display:none; margin-top:6px;">
+                        <button id="btnMarcarNoDeseado" type="button" class="secondary" style="font-size:.85rem; padding:4px 10px;">Marcar como no deseado</button>
+                    </div>
+                    <div id="ndPendingBadge" style="display:none; margin-top:6px;"><span class="badge-pending">No deseado · Pendiente</span></div>
+                    <div id="clientHistoryContainer" class="history-card" style="display:none;"></div>
+                </div>
+
+                <div>
+                    <label>&nbsp;</label>
+                    <button type="button" id="btnNuevoVeh" class="secondary">Nuevo vehículo</button>
+                </div>
+            </form>
+            <!-- Método de pago -->
+            <div id="payBox" style="display:none; margin-bottom:8px;">
+                <div style="max-width:320px;">
+                    <label>Método de pago</label>
+                    <select id="metodoPago">
+                        <option value="">— Selecciona —</option>
+                        <option value="EFECTIVO">Efectivo</option>
+                        <option value="TARJETA">Tarjeta</option>
+                        <option value="BIZUM">Bizum</option>
+                        <option value="BONO">Bono</option>
+                        <option value="TRANSFERENCIA">Transferencia</option>
+                        <option value="OTRO">Otro</option>
+                    </select>
+                </div>
+                <div id="bonoControls" class="inline" style="display:none; gap:10px; align-items:center; margin-top:10px;">
+                    <div>
+                        <div class="muted" style="margin-bottom:2px; font-size:.85rem;">Motivo del bono</div>
+                        <div id="bonoMotivoPreview" style="font-weight:600;">—</div>
+                    </div>
+                    <button id="btnEditBonoMotivo" type="button" class="secondary">Añadir motivo</button>
+                </div>
+            </div>
+            <div class="inline" style="justify-content:flex-end; gap:8px; margin-top:20px;">
+                <div id="cancelBox" style="display:none;">
+                    <button id="btnSolicitarAnulacion" type="button" class="secondary">Solicitar anulación</button>
+                </div>
+                <div id="cancelPendingBadge" style="display:none; align-self:center;"><span class="badge-pending">Anulación · Pendiente</span></div>
+                <button id="btnConvertirPagado" type="button" style="display:none;">Convertir a pagado</button>
+                <div id="deliverBox" style="display:none;">
+                    <button id="btnConvertirEntregado" type="button">Convertir a cerrado</button>
+                </div>
+            </div>
+        </section>
+
+        <!-- Servicios -->
+        <section class="card" style="margin-top:12px;">
+            <h3 id="addServicesTitle" style="margin:0 0 8px 0;">Añadir servicios</h3>
+            <div id="addServicesRow" class="two">
+                <div class="autocomplete" style="grid-column:1/-1;">
+                    <label>Buscar servicio</label>
+                    <input id="itemSearch" placeholder="Busca por nombre del servicio…" autocomplete="off" />
+                    <div id="itemList" class="autocomplete-list" style="display:none;"></div>
+                </div>
+
+                <div class="actions" style="margin-top:8px;">
+                    <button id="btnAddEditable" type="button" class="secondary">Añadir servicios editables</button>
+                </div>
+            </div>
+
+            <table>
+                <thead>
+                    <tr>
+                        <th>Descripción</th>
+                        <th class="right">Precio</th>
+                        <th class="right" style="width:120px;">Cantidad</th>
+                        <th class="right">Importe</th>
+                        <th style="width:80px;"></th>
+                    </tr>
+                </thead>
+                <tbody id="tbodyLines"></tbody>
+                <tfoot>
+                    <tr>
+                        <td colspan="3" class="right">Base imponible</td>
+                        <td class="right" id="base">0,00 €</td>
+                        <td></td>
+                    </tr>
+                    <tr>
+                        <td colspan="3" class="right">IVA (21%)</td>
+                        <td class="right" id="iva">0,00 €</td>
+                        <td></td>
+                    </tr>
+                    <tr>
+                        <td colspan="3" class="right"><strong>Total</strong></td>
+                        <td class="right" id="total"><strong>0,00 €</strong></td>
+                        <td></td>
+                    </tr>
+                </tfoot>
+            </table>
+
+            <div class="actions" style="margin-top:12px;">
+                <button id="btnGuardar" type="button">Guardar</button>
+                <button id="btnEliminar" type="button" class="secondary"
+                    style="display:none; margin-left:auto;">Eliminar</button>
+            </div>
+        </section>
+        </main>
+    </div>
+
+    <!-- MODAL: Marcar cliente como no deseado -->
+    <div id="ndTicketModal" class="modal" aria-hidden="true">
+        <div class="modal-backdrop"></div>
+        <div class="modal-card" style="max-width:640px;">
+            <div class="modal-head">
+                <h3 style="margin:0;">Solicitud: Cliente no deseado</h3>
+                <button type="button" class="secondary" id="ndTicketClose">✕</button>
+            </div>
+            <div id="ndTicketMsg" class="alert" style="display:none;"></div>
+            <form id="ndTicketForm" autocomplete="off">
+                <div style="margin-bottom:12px;">
+                    <label style="font-weight:500;">Cliente</label>
+                    <div id="ndTicketCliente" style="margin-top:4px; color:#555;">—</div>
+                </div>
+                <div>
+                    <label>Motivo</label>
+                    <textarea id="ndTicketMotivo" rows="4" maxlength="300"
+                        placeholder="Describe el motivo…" required></textarea>
+                    <div style="display:flex; justify-content:space-between; margin-top:4px;">
+                        <span class="muted" style="font-size:0.85em;">Detalla el motivo para el registro del cliente.</span>
+                        <span id="ndTicketMotivoCount" class="muted" style="font-size:0.85em;">0 / 300</span>
+                    </div>
+                </div>
+                <div style="display:flex; gap:8px; margin-top:12px; justify-content:flex-end;">
+                    <button type="button" id="ndTicketCancel" class="secondary">Cancelar</button>
+                    <button type="submit">Enviar solicitud</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL: Nuevo vehículo y cliente -->
+    <div id="vehModal" class="modal" aria-hidden="true">
+        <div class="modal-backdrop"></div>
+        <div class="modal-card">
+            <div class="modal-head">
+                <h3 style="margin:0;">Nuevo vehículo</h3>
+                <button type="button" class="secondary" id="vehClose">✕</button>
+            </div>
+            <div id="vehMsg" class="alert" style="display:none;"></div>
+
+            <form id="vehForm" class="two" autocomplete="off">
+                <p style="grid-column:1/-1; margin:0 0 4px; font-size:.8rem; color:var(--muted);">* Campos obligatorios</p>
+                <!-- Vehículo -->
+                <div><label>Matrícula*</label><input id="mvMatricula" required maxlength="20" /></div>
+                <div><label>Marca*</label><input id="mvMarca" required maxlength="80" /></div>
+                <div><label>Modelo*</label><input id="mvModelo" required maxlength="120" /></div>
+                <div><label>Color</label><input id="mvColor" maxlength="50" /></div>
+                <div><label>Nº plazas</label><input id="mvPlaza" maxlength="30" /></div>
+
+                <!-- Cliente existente (autocomplete) -->
+                <div class="autocomplete" style="grid-column:1/-1;">
+                    <label>Cliente (existente)</label>
+                    <input id="mvClienteSearch" placeholder="Escribe nombre, apellido o teléfono…" />
+                    <input type="hidden" id="mvClienteId" />
+                    <div id="mvClienteList" class="autocomplete-list" style="display:none;"></div>
+                </div>
+
+                <!-- Toggle nuevo cliente -->
+                <div style="grid-column:1/-1; display:flex; gap:8px; align-items:center;">
+                    <input type="checkbox" id="mvNewClientToggle" style="width:auto; margin:0;" />
+                    <label for="mvNewClientToggle" style="margin:0; font-weight:normal; user-select:none; cursor:pointer;">Crear nuevo cliente</label>
+                </div>
+
+                <!-- Nuevo cliente -->
+                <div id="newClientBox" class="two" style="grid-column:1/-1; display:none;">
+                    <div><label>Nombre*</label><input id="mvCliNombre" required maxlength="150" /></div>
+                    <div><label>Apellido*</label><input id="mvCliApellido" required maxlength="150" /></div>
+                    <div><label>NIF</label><input id="mvCliNif" maxlength="20" /></div>
+                    <div><label>Correo</label><input id="mvCliCorreo" type="email" maxlength="150" /></div>
+                    <div><label>Teléfono*</label><input id="mvCliTelefono" required maxlength="30" /></div>
+                </div>
+
+                <div style="grid-column:1/-1; display:flex; gap:8px; margin-top:8px;">
+                    <button type="submit">Guardar y usar</button>
+                    <button type="button" id="vehCancel" class="secondary">Cancelar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL: Solicitar anulación -->
+    <div id="cancelModal" class="modal" aria-hidden="true">
+        <div class="modal-backdrop"></div>
+        <div class="modal-card" style="max-width:640px;">
+            <div class="modal-head">
+                <h3 style="margin:0;">Solicitud: Anulación de ticket</h3>
+                <button type="button" class="secondary" id="cancelClose">✕</button>
+            </div>
+            <div id="cancelMsg" class="alert" style="display:none;"></div>
+            <form id="cancelForm" class="two" autocomplete="off">
+                <div style="grid-column:1/-1;">
+                    <label>Motivo</label>
+                    <textarea id="anulaMotivo" rows="5" maxlength="300"
+                        placeholder="Describe el motivo de la anulación…" required></textarea>
+                    <div style="display:flex; justify-content:space-between; margin-top:4px;">
+                        <span class="muted" style="font-size:0.85em;">Describe brevemente el motivo de la anulación.</span>
+                        <span id="anulaMotivoCount" class="muted" style="font-size:0.85em;">0 / 300</span>
+                    </div>
+                </div>
+                <div style="grid-column:1/-1; display:flex; gap:8px; margin-top:8px; justify-content:flex-end;">
+                    <button type="button" id="cancelAbort" class="secondary">Cancelar</button>
+                    <button type="submit">Enviar solicitud</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL: Motivo de bono -->
+    <div id="bonoModal" class="modal" aria-hidden="true">
+        <div class="modal-backdrop"></div>
+        <div class="modal-card">
+            <div class="modal-head">
+                <h3 style="margin:0">Motivo del bono</h3>
+                <button type="button" class="secondary" id="bonoClose">✕</button>
+            </div>
+            <div id="bonoMsg" class="alert" style="display:none;"></div>
+            <form id="bonoForm" class="two" autocomplete="off">
+                <div style="grid-column:1/-1;">
+                    <label>Motivo</label>
+                    <textarea id="bonoMotivoInput" rows="4" maxlength="300" placeholder="Introduce el motivo del bono…"
+                        required></textarea>
+                    <div style="display:flex; justify-content:space-between; margin-top:4px;">
+                        <span class="muted" style="font-size:0.85em;">Indica el motivo por el que se aplica el bono.</span>
+                        <span id="bonoMotivoCount" class="muted" style="font-size:0.85em;">0 / 300</span>
+                    </div>
+                </div>
+                <div style="grid-column:1/-1; display:flex; gap:8px; justify-content:flex-end; margin-top:8px;">
+                    <button type="button" id="bonoCancel" class="secondary">Cancelar</button>
+                    <button type="submit">Guardar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL: Servicios editables -->
+    <div id="editableModal" class="modal" aria-hidden="true">
+        <div class="modal-backdrop"></div>
+        <div class="modal-card" style="max-width:860px;">
+            <div class="modal-head">
+                <h3 style="margin:0;">Añadir servicios editables</h3>
+                <button type="button" class="secondary" id="editableClose">✕</button>
+            </div>
+
+            <div id="editableMsg" class="alert" style="display:none;"></div>
+
+            <div class="two" style="align-items:end;">
+                <div style="grid-column:1/-1;">
+                    <label>Buscar (opcional)</label>
+                    <input id="editableSearch" placeholder="Filtra por descripción…" autocomplete="off" />
+                    <div class="muted">Se cargan solo los servicios marcados como editables en tu centro.
+                    </div>
+                </div>
+            </div>
+
+            <div class="editable-table-wrap">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Descripción</th>
+                            <th class="right" style="width:160px;">Importe</th>
+                            <th style="width:120px;"></th>
+                        </tr>
+                    </thead>
+                    <tbody id="editableTbody"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: Añadir cliente a vehículo existente -->
+    <div id="cliModal" class="modal" aria-hidden="true">
+  <div class="modal-backdrop"></div>
+  <div class="modal-card" style="max-width:640px;">
+    <div class="modal-head">
+      <h3 style="margin:0;">Añadir nuevo cliente</h3>
+      <button type="button" class="secondary" id="cliClose">✕</button>
+    </div>
+
+    <div id="cliMsg" class="alert" style="display:none;"></div>
+
+    <form id="cliForm" class="two" autocomplete="off">
+      <p style="grid-column:1/-1; margin:0 0 4px; font-size:.8rem; color:var(--muted);">* Campos obligatorios</p>
+      <div><label>Nombre*</label><input id="mcNombre" required maxlength="150"/></div>
+      <div><label>Apellido*</label><input id="mcApellido" required maxlength="150"/></div>
+      <div><label>Teléfono*</label><input id="mcTelefono" required maxlength="30"/></div>
+      <div><label>Correo</label><input id="mcCorreo" type="email" maxlength="150"/></div>
+      <div><label>NIF</label><input id="mcNif" maxlength="20"/></div>
+
+      <div style="grid-column:1/-1; display:flex; gap:8px; justify-content:flex-end; margin-top:8px;">
+        <button type="button" id="cliCancel" class="secondary">Cancelar</button>
+        <button type="submit">Guardar y asociar</button>
+      </div>
+    </form>
+  </div>
+</div>
+    <script th:src="@{/js/app.js}"></script>
+    <script th:src="@{/js/crear_ticket.js}" defer></script>
+</body>
+</html>

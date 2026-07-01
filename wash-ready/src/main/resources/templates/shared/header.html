@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+
+<header th:fragment="appHeader(activeAdminTab, showUsername, showHomeLink, centroLabel, headerStyle)"
+        class="app-header" th:style="${headerStyle}">
+    <div>
+        <div class="welcome" th:if="${showUsername}">Bienvenido, <span id="username">—</span></div>
+        <div th:unless="${showUsername}">Panel de administración — <b>admin</b></div>
+        <div class="muted"><span th:text="${centroLabel}">Centro de trabajo:</span> <span id="centro">—</span></div>
+    </div>
+    <nav class="top-nav" th:if="${activeAdminTab != null}">
+        <a th:href="@{/admin/usuarios}" th:classappend="${activeAdminTab == 'usuarios'} ? 'active'">Usuarios</a>
+        <a th:href="@{/admin/centros}" th:classappend="${activeAdminTab == 'centros'} ? 'active'">Centros</a>
+        <a th:href="@{/admin/empresas}" th:classappend="${activeAdminTab == 'empresas'} ? 'active'">Empresas</a>
+    </nav>
+    <div th:class="${showHomeLink} ? 'actions' : ''">
+        <a th:if="${showHomeLink}" href="/" class="secondary header-home-link">← Inicio</a>
+        <button id="logout">Cerrar sesión</button>
+    </div>
+</header>
+
+</body>
+</html>
