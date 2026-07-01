@@ -1,0 +1,173 @@
+# Golden dataset de evaluacion del agente washready-copilot.
+#
+# Todas las respuestas se calcularon sobre los datos reales ya
+# presentes en la BD local. Fuente de cada respuesta:
+#   - rama_esperada: fixed -> llamada real a WashReadyClient (src/washready_client.py)
+#   - rama_esperada: sql   -> SQL directo sobre wash_ready_db (ningun endpoint
+#     existente cubre desgloses por servicio u operario)
+#
+# Convencion de negocio verificada en TicketRepository: "facturacion"/"ventas"
+# solo cuenta tickets en estado PAGADO o CERRADO (excluye PTE_PAGO y ANULADO),
+# salvo que la pregunta pida explicitamente otro estado. Las preguntas de
+# rama sql replican esa misma convencion salvo que se indique lo contrario.
+#
+# rama_esperada y tool_esperada son orientativas para depurar el
+# agente (que tool eligio vs. la esperada), no se usan como oraculo estricto.
+
+# ============================== RAMA FIJA (15) ==============================
+
+- id: f01
+  pregunta: "¿Cuántos tickets se han facturado en junio y por qué importe total?"
+  respuesta_esperada: "12 tickets, 393,50 € (base 325,20 € + IVA 68,30 €)"
+  rama_esperada: fixed
+  tool_esperada: resumen
+
+- id: f02
+  pregunta: "¿Cuánto facturó el centro Aeropuerto en junio?"
+  respuesta_esperada: "158,50 € en 7 tickets"
+  rama_esperada: fixed
+  tool_esperada: resumen
+
+- id: f03
+  pregunta: "¿Cuánto facturó el centro Central en junio?"
+  respuesta_esperada: "235,00 € en 5 tickets"
+  rama_esperada: fixed
+  tool_esperada: resumen
+
+- id: f04
+  pregunta: "¿Cuántos tickets están pendientes de pago en junio y por qué importe?"
+  respuesta_esperada: "5 tickets, 103,99 €"
+  rama_esperada: fixed
+  tool_esperada: resumen
+
+- id: f05
+  pregunta: "¿Cuántos tickets se anularon en junio y qué importe representaban?"
+  respuesta_esperada: "2 tickets, 32,00 €"
+  rama_esperada: fixed
+  tool_esperada: resumen
+
+- id: f06
+  pregunta: "¿Cuánto se ha cobrado con tarjeta en junio?"
+  respuesta_esperada: "280,00 € en 7 tickets"
+  rama_esperada: fixed
+  tool_esperada: resumen
+
+- id: f07
+  pregunta: "¿Cuánto se ha cobrado con Bizum en junio?"
+  respuesta_esperada: "51,50 € en 2 tickets"
+  notas: "Solo cuenta tickets PAGADO/CERRADO. Contrastar con f15: hay 4 tickets con Bizum en total, pero 2 de ellos están ANULADOS y no deberían contar como cobrados."
+  rama_esperada: fixed
+  tool_esperada: resumen
+
+- id: f08
+  pregunta: "¿Cuánto se ha cobrado en efectivo en junio?"
+  respuesta_esperada: "62,00 € en 3 tickets"
+  rama_esperada: fixed
+  tool_esperada: resumen
+
+- id: f09
+  pregunta: "¿Cuál es el beneficio neto de junio descontando los adelantos aceptados?"
+  respuesta_esperada: "348,50 € (393,50 € de facturación menos 45,00 € de adelantos aceptados)"
+  rama_esperada: fixed
+  tool_esperada: resumen_con_adelantos
+
+- id: f10
+  pregunta: "¿Qué facturación llevamos este mes por centro?"
+  respuesta_esperada: "Sin datos: no hay tickets registrados este mes (todos los tickets de prueba son de junio; la pregunta se hizo el 1 de julio)."
+  notas: "Caso borde intencionado: el agente no debe inventar cifras cuando la respuesta real es 'sin datos'."
+  rama_esperada: fixed
+  tool_esperada: facturacion_por_centro
+
+- id: f11
+  pregunta: "¿Cuántos centros de trabajo tenemos?"
+  respuesta_esperada: "7 (Central, Sucursal Norte, Aeropuerto, Eixample, Zona Franca, Puerto, Mestalla)"
+  rama_esperada: fixed
+  tool_esperada: listar_centros
+
+- id: f12
+  pregunta: "¿Cuántos servicios hay en el catálogo?"
+  respuesta_esperada: "40"
+  rama_esperada: fixed
+  tool_esperada: listar_servicios
+
+- id: f13
+  pregunta: "¿Cuántos tickets hay con la matrícula 9999XYZ?"
+  respuesta_esperada: "2"
+  rama_esperada: fixed
+  tool_esperada: buscar_tickets
+
+- id: f14
+  pregunta: "¿Cuántos tickets ha creado el operario diego (en cualquier estado)?"
+  respuesta_esperada: "13"
+  rama_esperada: fixed
+  tool_esperada: buscar_tickets
+
+- id: f15
+  pregunta: "¿Cuántos tickets tienen Bizum como método de pago, contando también los anulados?"
+  respuesta_esperada: "4"
+  notas: "Contraste con f07: buscar_tickets no filtra por estado por defecto, a diferencia de resumen()."
+  rama_esperada: fixed
+  tool_esperada: buscar_tickets
+
+# ============================== RAMA SQL (10) ==============================
+
+- id: s01
+  pregunta: "¿Qué servicio se ha vendido más (por unidades) en los tickets pagados o cerrados?"
+  respuesta_esperada: "Servicio adicional (precio libre), con 5 unidades vendidas (60,00 €)"
+  rama_esperada: sql
+  tool_esperada: consultar_sql
+
+- id: s02
+  pregunta: "¿Qué servicio ha generado más ingresos, aunque se haya vendido pocas veces?"
+  respuesta_esperada: "Bono temporada 20 lavados (Mestalla): 130,00 € vendido una sola vez"
+  rama_esperada: sql
+  tool_esperada: consultar_sql
+
+- id: s03
+  pregunta: "¿Cuántos servicios del catálogo no se han vendido nunca?"
+  respuesta_esperada: "26 de los 40 servicios del catálogo"
+  rama_esperada: sql
+  tool_esperada: consultar_sql
+
+- id: s04
+  pregunta: "¿Qué operario ha facturado más importe en junio?"
+  respuesta_esperada: "admin, con 235,00 € (aunque diego cerró más tickets: 7 frente a 5)"
+  notas: "Pregunta trampa: mas tickets no implica mas facturacion."
+  rama_esperada: sql
+  tool_esperada: consultar_sql
+
+- id: s05
+  pregunta: "¿Qué operario ha cerrado más tickets (pagados o cerrados) en junio?"
+  respuesta_esperada: "diego, con 7 tickets"
+  rama_esperada: sql
+  tool_esperada: consultar_sql
+
+- id: s06
+  pregunta: "¿Cuántas solicitudes de adelanto se han aceptado y por qué importe total?"
+  respuesta_esperada: "2 solicitudes, 45,00 € en total"
+  rama_esperada: sql
+  tool_esperada: consultar_sql
+
+- id: s07
+  pregunta: "¿Cuántas solicitudes de adelanto se han rechazado y por qué importe?"
+  respuesta_esperada: "2 solicitudes, 55,00 € en total"
+  rama_esperada: sql
+  tool_esperada: consultar_sql
+
+- id: s08
+  pregunta: "¿Cuántas solicitudes de 'cliente no deseado' hay registradas?"
+  respuesta_esperada: "7"
+  rama_esperada: sql
+  tool_esperada: consultar_sql
+
+- id: s09
+  pregunta: "¿Cuántas anulaciones de ticket hay registradas?"
+  respuesta_esperada: "5"
+  rama_esperada: sql
+  tool_esperada: consultar_sql
+
+- id: s10
+  pregunta: "¿Cuántos clientes distintos tenemos dados de alta?"
+  respuesta_esperada: "14"
+  rama_esperada: sql
+  tool_esperada: consultar_sql
