@@ -18,6 +18,8 @@ streamlit
 # Utilidades
 python-dotenv
 pydantic
+pydantic-settings
+pyyaml
 
 # Tests / evaluacion
 pytest
