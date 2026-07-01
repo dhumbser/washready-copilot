@@ -52,12 +52,3 @@ washready-copilot/
 ├── wash-ready/     # TFG previo: backend Spring Boot (base de datos + API). Base, no evaluable.
 └── copilot/        # Proyecto del curso: agente Python. <- el trabajo de AI Engineering
 ```
-
-## Puesta en marcha
-
-1. `cp .env.example .env` y rellena las claves (ver comentarios del archivo).
-2. Backend: arranca `wash-ready/` (requiere Java 21, Maven y MySQL).
-3. Agente: instrucciones en [`copilot/README.md`](copilot/README.md).
-
-> ⚠️ Nunca subas el archivo `.env` ni credenciales reales. La configuración
-> sensible se externaliza mediante variables de entorno.
