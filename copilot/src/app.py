@@ -7,7 +7,15 @@ en el .env de la raiz del repo):
 
 from __future__ import annotations
 
+import sys
 import uuid
+from pathlib import Path
+
+# Streamlit ejecuta este script insertando su propio directorio (src/) en
+# sys.path, no el directorio desde el que se lanza el comando "streamlit run".
+# Sin esto, "from src.agent import ..." falla con ModuleNotFoundError: No
+# module named 'src' (dentro de src/ no hay ningun paquete src/ anidado).
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 import streamlit as st
 
