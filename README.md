@@ -133,5 +133,5 @@ washready-copilot/
 3. Langfuse: `docker compose --env-file .env.langfuse -f docker-compose.langfuse.yml up -d`.
 4. Agente: instrucciones en [`copilot/README.md`](copilot/README.md).
 
-> ⚠️ Nunca subas los archivos `.env`/`.env.langfuse` ni credenciales reales. La
+> Nunca subas los archivos `.env`/`.env.langfuse` ni credenciales reales. La
 > configuración sensible se externaliza mediante variables de entorno.
