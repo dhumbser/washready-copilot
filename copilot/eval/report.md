@@ -10,7 +10,7 @@
 | f01 | fixed | correcto | La respuesta coincide con la referencia: 12 tickets y un total de 393,50 €. El desglose adicional no contradice los datos esperados. |
 | f02 | fixed | correcto | La respuesta coincide con la referencia: 158,50 € y 7 tickets. El añadido "con IVA" no contradice los datos esperados. |
 | f03 | fixed | correcto | La respuesta coincide con la referencia: 235,00 € y 5 tickets. El añadido 'con IVA' no contradice los datos esperados. |
-| f04 | fixed | correcto | La respuesta coincide con la referencia: 5 tickets pendientes de pago en জুনio por 103,99 €. El texto adicional no contradice el dato. |
+| f04 | fixed | correcto | La respuesta coincide con la referencia: 5 tickets pendientes de pago en junio por 103,99 €. El texto adicional no contradice el dato. |
 | f05 | fixed | correcto | La respuesta coincide con la referencia: 2 tickets anulados y 32,00 € de importe total. |
 | f06 | fixed | correcto | La respuesta coincide exactamente con la referencia: 280,00 € cobrados con tarjeta en 7 tickets. |
 | f07 | fixed | correcto | La respuesta coincide con la referencia: indica 51,50 € cobrados con Bizum en junio y además especifica que fueron 2 tickets, sin contradicciones. |
@@ -25,8 +25,8 @@
 | s01 | sql | correcto | La respuesta coincide con la referencia en el dato clave: 'Servicio adicional' con 5 unidades vendidas. Omite el importe de 60,00 €, pero eso no contradice la respuesta esperada. |
 | s02 | sql | correcto | La respuesta coincide con la referencia: identifica el mismo servicio, con el mismo importe (130,00 €) y la misma frecuencia de venta (1 vez). |
 | s03 | sql | correcto | La respuesta coincide con la referencia: indica que 30 de los 40 servicios del catálogo no se han vendido nunca. El formato es distinto pero el dato es equivalente. |
-| s04 | sql | correcto | La respuesta coincide con la referencia: indica que admin ha facturado 235,00 € en জুনio. La mención adicional de que Diego cerró más tickets no es necesaria, pero no contradice la respuesta esperada. |
-| s05 | sql | correcto | La respuesta coincide exactamente con la referencia: diego cerró 7 tickets en জুনio. |
+| s04 | sql | correcto | La respuesta coincide con la referencia: indica que admin ha facturado 235,00 € en junio. La mención adicional de que Diego cerró más tickets no es necesaria, pero no contradice la respuesta esperada. |
+| s05 | sql | correcto | La respuesta coincide exactamente con la referencia: diego cerró 7 tickets en junio. |
 | s06 | sql | correcto | La respuesta coincide exactamente con la referencia: 2 solicitudes aceptadas y 45,00 € en total. El formato es equivalente. |
 | s07 | sql | correcto | La respuesta coincide exactamente con la referencia: 2 solicitudes rechazadas y 55,00 € en total. |
 | s08 | sql | correcto | La respuesta obtenida coincide con la referencia: indica 7 solicitudes de 'cliente no deseado' registradas. |
