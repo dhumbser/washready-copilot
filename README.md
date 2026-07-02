@@ -4,6 +4,8 @@ Agente conversacional que responde preguntas de negocio en lenguaje natural sobr
 los datos de **Wash & Ready** (facturación, tickets, servicios, centros).
 Proyecto del curso de **AI Engineering**.
 
+🎥 [Vídeo de la presentación](https://eepmad-my.sharepoint.com/:v:/g/personal/diego-humbser1_eep-igroup_com/IQAX6c2rOPr1TJ2lrWCFiZ-TASZ_UBttIHY_uxA97Rv-274?nav=eyJyZWZlcnJhbEluZm8iOnsicmVmZXJyYWxBcHAiOiJPbmVEcml2ZUZvckJ1c2luZXNzIiwicmVmZXJyYWxBcHBQbGF0Zm9ybSI6IldlYiIsInJlZmVycmFsTW9kZSI6InZpZXciLCJyZWZlcnJhbFZpZXciOiJNeUZpbGVzTGlua0NvcHkifX0&e=u1JNr7)
+
 > **Qué es de quién:** `wash-ready/` es mi TFG previo (aplicación Spring Boot que
 > aporta la base de datos y la API); **`copilot/` es el proyecto de este curso**:
 > el agente construido sobre esos datos reales.
